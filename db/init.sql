@@ -1,0 +1,34 @@
+CREATE DATABASE IF NOT EXISTS gigsdb;
+USE gigsdb;
+
+CREATE TABLE IF NOT EXISTS Events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    organiser VARCHAR(255) NOT NULL,
+);
+
+-- Add additional columns to the Events table
+ALTER TABLE Events
+ADD COLUMN IF NOT EXISTS date DATE NOT NULL;
+ADD COLUMN IF NOT EXISTS time TIME NOT NULL;
+ADD COLUMN IF NOT EXISTS venue_name VARCHAR(255) NOT NULL;
+ADD FOREIGN KEY (venue_name) REFERENCES Venues(name)
+ADD FOREIGN KEY (organiser) REFERENCES Organisers(name);
+ADD COLUMN IF NOT EXISTS links TEXT NOT NULL;
+
+
+CREATE TABLE IF NOT EXISTS Venues (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    suburb VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Organisers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    website VARCHAR(255) NOT NULL
+);
+
+-- pre seed some data
+INSERT INTO Venues (name, suburb) VALUES ('+six12', 'Melbourne');

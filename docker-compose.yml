@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    volumes:
+      - ./app:/app            # Optional: Mount the app directory for live changes
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
