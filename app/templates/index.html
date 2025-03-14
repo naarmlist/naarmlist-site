@@ -5,25 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <title>Naarm List</title>
+  <style>
+    .nav-links a {
+      margin: 0 10px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  </style>
 </head>
 <body class="bg-light">
   <div class="container mt-5">
     <div class="text-center mb-4">
       <h1 class="display-4 text-primary">Naarm List</h1>
-      <div>
-        <a href="{{ url_for('venues') }}">Venues</a> | 
-        <a href="{{ url_for('organisers') }}">Organisers/Promoters</a>
+      <div class="nav-links">
+        <a href="{{ url_for('venues') }}" class="btn btn-link">Venues</a> | 
+        <a href="{{ url_for('organisers') }}" class="btn btn-link">Organisers/Promoters</a> |
+        <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a>
       </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="text-center mb-4">
+      <form method="POST" action="{{ url_for('index') }}" style="display:inline-block;">
+        <input type="text" name="search" placeholder="Search events" class="form-control" style="display:inline-block; width:auto;" value="{{ search_query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+      <form method="POST" action="{{ url_for('clear_search') }}" style="display:inline-block;">
+        <button type="submit" class="btn btn-danger">Clear Search</button>
+      </form>
+    </div>
+
     <!-- Catalogue -->
-    <div class="card p-4 mb-4">
+    <div class="card p-4 mb-4 table-responsive">
         <h2 class="text-secondary">Events</h2>
         <table class="table table-striped table-hover">
         <thead class="thead-dark">
             <tr>
             <th>Date & Time</th>
-            <th>Event Title @ Vanue</th>
+            <th>Event Title @ Venue</th>
             <th>Organisers</th>
             <th>Link</th>
             <th>Tags</th>
@@ -33,8 +53,8 @@
             {% for event in events %}
             <tr>
             <td>{{ event['datetime'].strftime('%a %B %d') }}{% if event['datetime'].day in [1, 21, 31] %}st{% elif event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %} @ {{ event['datetime'].strftime('%I:%M%p') }}</td>
-            <td>{{ event['title'] }} @ {{ event['organisers'] }}</td>
-            <td>{{ event['venue'] }}</td>
+            <td>{{ event['title'] }} @ {{ event['venue'] }}</td>
+            <td>{{ event['organisers'] }}</td>
             <td>{{ event['link'] }}</td>
             <td>{{ event['tags']|join(',') }}</td>
             </tr>
@@ -43,9 +63,6 @@
         </table>
     </div>
 
-    <div class="text-center">
-      <a href="{{ url_for('add_event') }}" class="btn btn-primary">Add Event</a>
-    </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -10,14 +10,31 @@ def get_db_connection():
     db = client['gigsdb']
     return db
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db_connection()
-    events = list(db.events.find())
+    search_query = ""
+    if request.method == 'POST':
+        search_query = request.form['search']
+        events = list(db.events.find({
+            '$or': [
+                {'title': {'$regex': search_query, '$options': 'i'}},
+                {'organisers': {'$regex': search_query, '$options': 'i'}},
+                {'venue': {'$regex': search_query, '$options': 'i'}},
+                {'tags': {'$regex': search_query, '$options': 'i'}}
+            ]
+        }))
+    else:
+        events = list(db.events.find())
+    
     for event in events:
         event['datetime'] = datetime.fromisoformat(event['datetime'])
     events.sort(key=lambda x: x['datetime'])
-    return render_template('index.html', events=events)
+    return render_template('index.html', events=events, search_query=search_query)
+
+@app.route('/clearSearch', methods=['POST'])
+def clear_search():
+    return redirect(url_for('index'))
 
 @app.route('/createEvent', methods=['POST'])
 def create_event():
@@ -26,7 +43,7 @@ def create_event():
     venue = request.form['venue']
     link = request.form['link']
     datetime_str = request.form['datetime']
-    tags = request.form['tags'].split(',') # create an array from comma separated tags
+    tags = request.form['tags'].split(',')
 
     db = get_db_connection()
     db.events.insert_one({
