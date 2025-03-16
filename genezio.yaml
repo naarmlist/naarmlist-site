@@ -1,0 +1,15 @@
+backend:
+    functions:
+        - entry: app.py
+          handler: app
+          name: flask
+          path: .
+          type: httpServer
+    language:
+        name: python
+        packageManager: pip
+        runtime: python3.13.x
+    path: app
+name: naarm-list
+region: us-east-1
+yamlVersion: 2
