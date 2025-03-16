@@ -2,12 +2,13 @@ from flask import Flask, request, render_template, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime
 import pytz
+import os
 
 app = Flask(__name__)
 
 def get_db_connection():
-    client = MongoClient('mongodb://db:27017/')
-    db = client['gigsdb']
+    client = MongoClient(os.getenv('GIGSDB_DATABASE_URL'))
+    db = client.get_database()
     return db
 
 @app.route('/', methods=['GET', 'POST'])
