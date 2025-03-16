@@ -3,7 +3,7 @@ backend:
         - entry: app.py
           handler: app
           name: flask
-          path: .
+          path: ./app
           type: httpServer
     language:
         name: python
