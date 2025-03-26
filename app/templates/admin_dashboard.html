@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4">Admin Dashboard</h2>
+    <!-- Table to display all events -->
+     <h3>Events</h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Title</th>
+          <th>Venue</th>
+          <th>Tags</th>
+          <th>Artists</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        <tr>
+          <td>{{ event['datetime'].strftime('%a %B %d, %I:%M %p') }}</td>
+          <td>{{ event['title'] }}</td>
+          <td>{{ event['venue'] }}</td>
+          <td>{{ event['tags'] | join(', ') }}</td>
+          <td>{{ event['artists'] | join(', ') }}</td>
+          <td>
+            <br>
+            <!-- Edit and delete buttons for each event -->
+            <a href="{{ url_for('admin_edit', event_id=event['_id']) }}" class="btn btn-success btn-sm" style="margin-left: 5px;">Edit</a>
+            <br>
+            <br>
+            <form method="POST" action="{{ url_for('admin_delete', event_id=event['_id']) }}" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+            <br>
+            <br>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <!-- Log out button which returns us to home and removes privileged access -->
+    <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
+  </div>
+</body>
+</html>

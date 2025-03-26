@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Event</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2>Edit Event</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" name="title" id="title" value="{{ event['title'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="organisers" class="form-label">Organisers</label>
+        <input type="text" class="form-control" name="organisers" id="organisers" value="{{ event['organisers'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="venue" class="form-label">Venue</label>
+        <input type="text" class="form-control" name="venue" id="venue" value="{{ event['venue'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="link" class="form-label">Link</label>
+        <input type="text" class="form-control" name="link" id="link" value="{{ event['link'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="datetime" class="form-label">Date & Time (ISO Format)</label>
+        <input type="text" class="form-control" name="datetime" id="datetime" value="{{ event['datetime'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="tags" class="form-label">Tags (comma-separated)</label>
+        <input type="text" class="form-control" name="tags" id="tags" value="{{ event['tags'] | join(',') }}">
+      </div>
+      <div class="mb-3">
+        <label for="artists" class="form-label">Artists (comma-separated)</label>
+        <input type="text" class="form-control" name="artists" id="artists" value="{{ event['artists'] | join(',') }}">
+      </div>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</body>
+</html>
