@@ -16,6 +16,7 @@
           <th>Date & Time</th>
           <th>Title</th>
           <th>Venue</th>
+          <th>Organisers</th>
           <th>Tags</th>
           <th>Artists</th>
           <th>Actions</th>
@@ -26,6 +27,7 @@
         <tr>
           <td>{{ event['datetime'].strftime('%a %B %d, %I:%M %p') }}</td>
           <td>{{ event['title'] }}</td>
+          <td>{{ event['organisers'] }}</td>
           <td>{{ event['venue'] }}</td>
           <td>{{ event['tags'] | join(', ') }}</td>
           <td>{{ event['artists'] | join(', ') }}</td>

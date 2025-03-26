@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <title>Add Event</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body class="bg-light">
   <div class="container mt-5">
     <div class="text-center mb-4">
-      <h1 class="display-4 text-primary">Add Event</h1>
+      <h1 class="display-4 text-primary">
+        <pre>
+░▒▓███████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓██████████████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓███████▓▒░▒▓████████▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓██████▓▒░   ░▒▓█▓▒░     
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░   ░▒▓█▓▒░     
+        </pre>
+      </h1>
     </div>
+    <br>
 
     <!-- Add Event Form -->
     <div class="card p-4 mb-4 form-container">
@@ -21,7 +34,8 @@
         </div>
         <div class="mb-3">
           <label for="organisers" class="form-label">Organiser</label>
-          <input type="text" class="form-control" id="organisers" name="organisers" placeholder="Name of event promoter/organisers (comma separated list for multiple organisers)" required>
+          <input type="text" class="form-control" id="organisers" name="organisers"
+            placeholder="Name of event promoter/organisers (comma separated list for multiple organisers)" required>
         </div>
         <div class="mb-3">
           <label for="venue" class="form-label">Venue</label>
@@ -37,12 +51,14 @@
         </div>
         <div class="mb-3">
           <label for="tags" class="form-label">Tags</label>
-          <input type="text" class="form-control" id="tags" name="tags" placeholder="Enter tags (comma separated list) e.g. techno, japan, vinyl" required>
+          <input type="text" class="form-control" id="tags" name="tags"
+            placeholder="Enter tags (comma separated list) e.g. techno, japan, vinyl" required>
         </div>
         <!-- New Artists field -->
         <div class="mb-3">
           <label for="artists" class="form-label">Artists</label>
-          <input type="text" class="form-control" id="artists" name="artists" placeholder="Enter artists (comma separated list) e.g. Drake, Rihanna" required>
+          <input type="text" class="form-control" id="artists" name="artists"
+            placeholder="Enter artists (comma separated list) e.g. Drake, Rihanna" required>
         </div>
         <div class="mb-3">
           <button type="submit" class="btn btn-primary">Submit</button>
@@ -52,4 +68,5 @@
     </div>
   </div>
 </body>
+
 </html>

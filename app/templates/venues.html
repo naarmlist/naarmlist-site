@@ -1,75 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <title>Venues List</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body class="bg-light">
   <div class="container mt-5">
     <div class="text-center mb-4">
-      <h1 class="display-4 text-primary">Venues List</h1>
+      <h1 class="display-4 text-primary">
+        <pre>
+        ░▒▓███████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓██████████████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓███████▓▒░▒▓████████▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓██████▓▒░   ░▒▓█▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░
+        ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░   ░▒▓█▓▒░
+        </pre>
+      </h1>
+      <br>
     </div>
 
     <!-- Venues List -->
     <div class="card p-4 mb-4 table-responsive">
-        <table class="table table-striped table-hover">
+      <table class="table table-striped table-hover">
         <thead class="thead-dark">
-            <tr>
+          <tr>
             <th>Name</th>
+            <th>Description</th>
+            <th>Contact</th>
+            <th>Link</th>
             <th>Location</th>
-            </tr>
+          </tr>
         </thead>
         <tbody>
-            {% for venue in venues %}
-            <tr>
-            <td>{{ venue }}</td>
-            <!-- Added cell with a Google Maps search link -->
+          {% for venue in venues %}
+          <tr>
+            <td>{{ venue['name'] }}</td>
+            <td>{{ venue['description'] }}</td>
+            <td>{{ venue['contact'] }}</td>
             <td>
-                <a href="https://www.google.com/maps/search/?api=1&query={{ venue }}+melbourne" target="_blank">
-                Google Maps
-                </a>
+              {% if venue['link'] %}
+              <a href="{{ venue['link'] }}" target="_blank">Link</a>
+              {% else %}
+              N/A
+              {% endif %}
             </td>
-            </tr>
-            {% endfor %}
+            <td>
+              {% if venue['location'] %}
+              <a href="https://www.google.com/maps/search/?api=1&query={{ venue['location'] }}+melbourne"
+                target="_blank">Google Maps</a>
+              {% else %}
+              <a href="https://www.google.com/maps/search/?api=1&query={{ venue['name'] }}+melbourne"
+                target="_blank">Google Maps</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-        </table>
+      </table>
     </div>
 
     <!-- New Venue Form -->
     <div class="card p-4 mb-4 form-container">
       <h2 class="h4 text-center mb-3">Add New Venue</h2>
-      <form method="POST" action="/createVenue">
-        <div class="mb-3">
+      <form method="POST" action="/createVenue" class="d-flex flex-column align-items-center">
+        <div class="mb-3 w-100" style="min-width: 500px; text-align: left;">
           <label for="name" class="form-label">Venue Name</label>
           <input type="text" class="form-control" id="name" name="name" placeholder="Enter venue name" required>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 w-100" style="min-width: 500px; text-align: left;">
           <label for="description" class="form-label">Description</label>
-          <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description" required></textarea>
+          <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter description"
+            required></textarea>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 w-100" style="min-width: 500px; text-align: left;">
           <label for="location" class="form-label">Location</label>
           <input type="text" class="form-control" id="location" name="location" placeholder="Enter location" required>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 w-100" style="min-width: 500px; text-align: left;">
           <label for="contact" class="form-label">Contact</label>
-          <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter contact information" required>
+          <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter contact information"
+            required>
         </div>
-        <div class="mb-3">
+        <div class="mb-3 w-100" style="min-width: 500px; text-align: left;">
           <label for="link" class="form-label">Link</label>
           <input type="url" class="form-control" id="link" name="link" placeholder="Enter link (optional)">
         </div>
-        <div class="mb-3">
-          <button type="submit" class="btn btn-primary">Add Venue</button>
+        <br>
+        <div class="mb-3 w-100">
+          <button type="submit" class="btn btn-primary w-100">Add Venue</button>
         </div>
+        <br>
       </form>
     </div>
 
     <div class="text-center mt-3">
-      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Home</a>
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
     </div>
   </div>
 </body>
+
 </html>

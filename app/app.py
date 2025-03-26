@@ -65,9 +65,20 @@ def create_event():
 
 @app.route('/createVenue', methods=['POST'])
 def create_venue():
-    venue = request.form['venue']
+    name = request.form['name']
+    description = request.form['description']
+    location = request.form['location']
+    contact = request.form['contact']
+    link = request.form['link']
+
     db = get_db_connection()
-    db.venues.insert_one({'venue': venue})
+    db.venues.insert_one({
+        'name': name,
+        'description': description,
+        'location': location,
+        'contact': contact,
+        'link': link
+    })
     return redirect(url_for('venues'))
 
 @app.route('/addEvent', methods=['GET'])
@@ -77,7 +88,7 @@ def add_event():
 @app.route('/venues', methods=['GET'])
 def venues():
     db = get_db_connection()
-    venues = db.events.distinct('venue')
+    venues = db.venues.find()
     return render_template('venues.html', venues=venues)
 
 @app.route('/organisers', methods=['GET'])

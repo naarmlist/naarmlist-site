@@ -5,6 +5,9 @@ body {
   margin: 10px;
   text-align: center;
 }
+h1 {
+    font-size: 0.5vw;
+}
 .container {
   width: 90%;
   margin: auto;
@@ -76,4 +79,21 @@ a {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.form-container .form-control {
+  width: 100%;
+  max-width: 500px;
+}
+.form-container .btn {
+  width: 100%;
+  max-width: 500px;
+}
+.form-container .form-label {
+  text-align: left;
+  width: 100%;
 }
