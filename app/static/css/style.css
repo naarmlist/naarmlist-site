@@ -10,12 +10,21 @@ h1 {
 }
 .container {
   width: 90%;
-  margin: auto;
+  max-width: 1200px; /* Set a maximum width for the container */
+  margin: 0 auto; /* Center the container horizontally */
 }
 h1, h2 {
   font-family: Arial, sans-serif;
   color: #000;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+body {
+    background: linear-gradient(135deg, #f0f0f0, #ffffff);
+    font-family: Verdana, sans-serif;
+    color: #000;
+    margin: 0; /* Remove any default body margins */
+    padding: 0;
+    text-align: center;
 }
 .nav-links a {
   margin: 0 5px;
@@ -48,23 +57,32 @@ a {
   text-decoration: underline;
   color: blue;
 }
-@media (orientation: portrait) {
-  .table {
-    font-size: 0.8rem;
+@media (max-width: 576px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+    thead {
+      display: none; /* Hide table headers */
+    }
+    tr {
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+    }
+    td {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0.5rem 0;
+    }
+    td:before {
+      content: attr(data-label); /* Use data-label attribute for headers */
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      color: #333;
+    }
   }
-  .container {
-    width: 100%;
-    padding: 0 10px;
-  }
-}
-@media (orientation: landscape) {
-  .table {
-    font-size: 1rem;
-  }
-}
-@media only screen and (max-width: 768px) {
-  body { padding: 0 10px; }
-}
 .search-container {
   display: flex;
   flex-direction: column;

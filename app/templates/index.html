@@ -24,9 +24,7 @@
       </h1>
       <br>
       <div class="nav-links">
-        <a href="{{ url_for('venues') }}" class="btn btn-link">Venues</a> |
         <a href="{{ url_for('organisers') }}" class="btn btn-link">Organisers/Promoters</a> |
-        <a href="{{ url_for('artists') }}" class="btn btn-link">Artists</a> |
         <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a>
       </div>
     </div>
@@ -35,7 +33,7 @@
     <div class="container mt-5">
 
       <!-- Search Bar -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 search-container">
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
           welcome to naarmlist. a curated list of events happening in naarm/melbourne. to add your own event use the
           link above.
@@ -43,57 +41,56 @@
           <br>
           for assistance or enquiries email ijkeleher@outlook.com
         </p>
-        <div class="search-container">
-          <form method="POST" action="{{ url_for('index') }}">
-            <input type="text" name="search" placeholder="Search events" class="form-control"
-              value="{{ search_query }}">
-            <div class="btn-group">
-              <button type="submit" class="btn btn-primary">Search</button>
-          </form>
-          <form method="POST" action="{{ url_for('clear_search') }}">
-            <button type="submit" class="btn btn-danger mt-2">Clear Search</button>
-          </form>
-        </div>
+        <form method="POST" action="{{ url_for('index') }}" class="d-flex flex-column align-items-center">
+          <input type="text" name="search" placeholder="Search events" class="form-control mb-3"
+            value="{{ search_query }}">
+          <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </form>
+        <form method="POST" action="{{ url_for('clear_search') }}" class="d-flex justify-content-center mt-2">
+          <button type="submit" class="btn btn-danger">Clear Search</button>
+        </form>
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
           you can use tags, organisers, artists, venues and event titles as search terms.
           <br></br>clear the search to see all events again.
         </p>
       </div>
     </div>
-  </div>
-  <div class="container mt-5">
     <!-- Table to display all events -->
-    <h3>Events</h3>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Date & Time</th>
-          <th>Title @ Venue</th>
-          <th>Organiser</th>
-          <th>Tags</th>
-          <th>Artists</th>
-          <th>Add to Calendar</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for event in events %}
-        <tr>
-          <td>{{ event['datetime'].strftime('%a %B %d') }}{% if event['datetime'].day in [1, 21, 31] %}st{% elif
-            event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
-            ({{ event['datetime'].strftime('%I:%M%p') }})</td>
-          <td>
-            <a href="{{ event['link'] }}" target="_blank">{{ event['title'] }}</a> @ {{ event['venue'] }}
-          </td>
-          <td>{{ event['organisers'] }}</td>
-          <td>{{ event['tags'] | join(', ') }}</td>
-          <td>{{ event['artists'] | join(', ') }}</td>
-          <td>
-            <a href="{{ url_for('calendar_event', event_id=event['_id']) }}" target="_blank">📅</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <h3 class="text-center">Events</h3>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Title @ Venue</th>
+            <th>Organiser</th>
+            <th>Tags</th>
+            <th>Artists</th>
+            <th>Calendar Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in events %}
+          <tr>
+            <td>{{ event['datetime'].strftime('%a %B %d') }}{% if event['datetime'].day in [1, 21, 31] %}st{% elif
+              event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
+              ({{ event['datetime'].strftime('%I:%M%p') }})</td>
+            <td style="word-wrap: break-word">
+              <a href="{{ event['link'] }}" target="_blank">{{ event['title'] }}</a> @ {{ event['venue'] }}
+            </td>
+            <td>{{ event['organisers'] }}</td>
+            <td>{{ event['tags'] | join(', ') }}</td>
+            <td>{{ event['artists'] | join(', ') }}</td>
+            <td>
+              <a href="{{ url_for('calendar_event', event_id=event['_id']) }}" target="_blank">(add to calendar)</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- link to admin login page -->
