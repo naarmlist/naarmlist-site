@@ -25,7 +25,6 @@
       </h1>
       <br>
       <div class="nav-links">
-        <a href="{{ url_for('organisers') }}" class="btn btn-link">Organisers/Promoters</a> |
         <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a> |
         <a href="{{ url_for('notes') }}" class="btn btn-link">Notes</a>
       </div>
@@ -80,7 +79,7 @@
               event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
               ({{ event['datetime'].strftime('%I:%M%p') }})</td>
             <td style="word-wrap: break-word">
-              <a href="{{ event['link'] }}" target="_blank">{{ event['title'] }}</a> @ {{ event['venue'] }}
+              <a href="{{ event['link'] }}" target="{{ event['link'] }}">{{ event['title'] }}</a> @ {{ event['venue'] }}
             </td>
             <td>{{ event['organisers'] }}</td>
             <td>{{ event['tags'] | join(', ') }}</td>

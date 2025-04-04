@@ -42,6 +42,10 @@ def index():
 def clear_event_search():
     return redirect(url_for('index'))
 
+@app.route('/clearNoteSearch', methods=['POST'])
+def clear_note_search():
+    return redirect(url_for('notes'))
+
 @app.route('/createEvent', methods=['POST'])
 def create_event():
     title = request.form['title']
@@ -176,11 +180,14 @@ END:VCALENDAR
 """
     return Response(ics_content, mimetype="text/calendar", headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"})
 
-@app.route('/notes', methods=['GET'])
+@app.route('/notes', methods=['GET', 'POST'])
 def notes():
     notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
-    search_query = request.args.get('search', '').lower()
+    search_query = ""
     notes = []
+    
+    if request.method == 'POST' and 'search' in request.form:
+        search_query = request.form['search']
     
     if os.path.exists(notes_dir):
         for filename in os.listdir(notes_dir):
@@ -216,11 +223,11 @@ def notes():
                     else:
                         metadata['tags'] = []
 
-                    # Apply search filter
+                    # Apply search filter only if there's a query from POST
                     if search_query:
-                        title_match = metadata.get('title', '').lower().find(search_query) != -1
-                        tags_match = any(search_query in tag.lower() for tag in metadata.get('tags', []))
-                        content_match = content.lower().find(search_query) != -1
+                        title_match = metadata.get('title', '').lower().find(search_query.lower()) != -1
+                        tags_match = any(search_query.lower() in tag.lower() for tag in metadata.get('tags', []))
+                        content_match = content.lower().find(search_query.lower()) != -1
                         if not (title_match or tags_match or content_match):
                             continue
 
@@ -230,9 +237,9 @@ def notes():
                         'content': html_content,
                         'metadata': metadata
                     })
+
     # Sort notes by date, newest first
     notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
-    # After the notes list account for search with no matches, we can check if there are results
     has_results = len(notes) > 0
     return render_template('notes.html', 
                          notes=notes, 

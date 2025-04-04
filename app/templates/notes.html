@@ -26,13 +26,16 @@
       <br>
       <!-- Search form -->
       <div class="search-container mb-4">
-        <form method="GET" action="{{ url_for('notes') }}" class="d-flex justify-content-center">
-          <input type="text" name="search" class="form-control" placeholder="Search notes by title, tags, or content..." value="{{ search_query }}">
-          {% if search_query %}
-            <button type="button" onclick="window.location.href='{{ url_for('notes') }}'" class="btn btn-primary">Clear Search</button>
-          {% else %}
-            <button type="submit" class="btn btn-primary">Search</button>
-          {% endif %}
+        <form method="POST" action="{{ url_for('notes') if not search_query else url_for('clear_note_search') }}" class="d-flex flex-column align-items-center">
+          <input type="text" name="search" placeholder="Search notes by title, tags, or content..." class="form-control mb-3"
+            value="{{ search_query }}">
+          <div class="btn-group">
+            {% if search_query %}
+              <button type="submit" class="btn btn-primary">Clear Search</button>
+            {% else %}
+              <button type="submit" class="btn btn-primary">Search</button>
+            {% endif %}
+          </div>
         </form>
       </div>
     </div>
