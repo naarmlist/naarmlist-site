@@ -79,8 +79,10 @@
               event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
               ({{ event['datetime'].strftime('%I:%M%p') }})</td>
             <td style="word-wrap: break-word">
-              <a href="{{ event['link'] }}" target="{{ event['link'] }}">{{ event['title'] }}</a> @ {{ event['venue'] }}
-            </td>
+                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">
+                  {{ event['link'] }}
+                </a>
+              </td>
             <td>{{ event['organisers'] }}</td>
             <td>{{ event['tags'] | join(', ') }}</td>
             <td>{{ event['artists'] | join(', ') }}</td>
