@@ -38,8 +38,8 @@ def index():
     events.sort(key=lambda x: x['datetime'])
     return render_template('index.html', events=events, search_query=search_query)
 
-@app.route('/clearSearch', methods=['POST'])
-def clear_search():
+@app.route('/clearEventSearch', methods=['POST'])
+def clear_event_search():
     return redirect(url_for('index'))
 
 @app.route('/createEvent', methods=['POST'])
