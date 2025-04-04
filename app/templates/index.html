@@ -36,11 +36,13 @@
       <!-- Search Bar -->
       <div class="card p-4 mb-4 search-container">
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
-          welcome to naarmlist, a curated list of events happening in naarm/melbourne
+          welcome to naarmlist, a curated list of events happening in melbourne
           <br></br>
           to add your own event use the link above
           <br></br>
-          for assistance or enquiries email ijkeleher@outlook.com
+          this site is provided by <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
+          <br></br>
+          for assistance or enquiries email <a href="ijkeleher@outlook.com">ijkeleher@outlook.com</a>
         </p>
         <form method="POST" action="{{ url_for('index') if not search_query else url_for('clear_event_search') }}" class="d-flex flex-column align-items-center">
           <input type="text" name="search" placeholder="Search events" class="form-control mb-3"

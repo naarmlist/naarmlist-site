@@ -11,8 +11,8 @@ app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
 
 def get_db_connection():
-    client = MongoClient('mongodb://db:27017/')
-    db = client['gigsdb']
+    client = MongoClient(os.getenv("DB_URL"))
+    db = client[os.getenv("DB_NAME")]
     return db
         
 @app.route('/', methods=['GET', 'POST'])
@@ -41,10 +41,6 @@ def index():
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
     return redirect(url_for('index'))
-
-@app.route('/clearNoteSearch', methods=['POST'])
-def clear_note_search():
-    return redirect(url_for('notes'))
 
 @app.route('/createEvent', methods=['POST'])
 def create_event():
@@ -246,12 +242,16 @@ def notes():
                          search_query=search_query, 
                          has_results=has_results)
 
+@app.route('/clearNoteSearch', methods=['POST'])
+def clear_note_search():
+    return redirect(url_for('notes'))
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == 'admin' and password == 'admin':
+        if username == os.getenv("ADMIN_USER") and password == os.getenv("ADMIN_PASS"):
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
         else:

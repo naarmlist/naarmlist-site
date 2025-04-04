@@ -10,6 +10,10 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - DB_URL=${DB_URL}
+      - DB_NAME=${DB_NAME}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASS}
     volumes:
       - ./app:/app            # Optional: Mount the app directory for live changes
   db:
