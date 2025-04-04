@@ -24,6 +24,10 @@
         </pre>
       </h1>
       <br>
+      <div class="nav-links">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+      </div>
+      <br>
       <!-- Search form -->
       <div class="search-container mb-4">
         <form method="POST" action="{{ url_for('notes') if not search_query else url_for('clear_note_search') }}" class="d-flex flex-column align-items-center">
@@ -43,8 +47,7 @@
     <div class="notes-container">
         {% if search_query and not has_results %}
           <div class="no-results">
-            <p>No items found for search: "{{ search_query }}"</p>
-            <p>Clear the search to show entries</p>
+            <p>No items found for search: "{{ search_query }}"</p><p>Clear the search to show entries</p>
           </div>
         {% else %}
       <!-- Sidebar -->
@@ -89,10 +92,6 @@
           </div>
         {% endfor %}
       </div>
-    </div>
-
-    <div class="text-center mt-3">
-      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
     </div>
   </div>
 </body>
