@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import pytz
 import os
 from bson.objectid import ObjectId  # Added for ObjectId conversion
+import markdown
+import re
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
@@ -173,6 +175,69 @@ END:VEVENT
 END:VCALENDAR
 """
     return Response(ics_content, mimetype="text/calendar", headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"})
+
+@app.route('/notes', methods=['GET'])
+def notes():
+    notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
+    search_query = request.args.get('search', '').lower()
+    notes = []
+    
+    if os.path.exists(notes_dir):
+        for filename in os.listdir(notes_dir):
+            if filename.endswith('.md'):
+                filepath = os.path.join(notes_dir, filename)
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                    # Parse front matter
+                    metadata = {}
+                    if content.startswith('---'):
+                        parts = content.split('---', 2)[1:]
+                        if len(parts) >= 2:
+                            front_matter = parts[0].strip()
+                            content = parts[1].strip()
+                            # Parse each line of front matter
+                            for line in front_matter.split('\n'):
+                                if ':' in line:
+                                    key, value = line.split(':', 1)
+                                    metadata[key.strip()] = value.strip()
+                    
+                    # Convert date string to datetime if present
+                    if 'date' in metadata:
+                        try:
+                            metadata['date'] = datetime.strptime(metadata['date'], '%Y-%m-%d')
+                        except ValueError:
+                            metadata['date'] = datetime.now()
+                    else:
+                        metadata['date'] = datetime.now()
+
+                    # Convert tags string to list if present
+                    if 'tags' in metadata:
+                        metadata['tags'] = [tag.strip() for tag in metadata['tags'].split(',')]
+                    else:
+                        metadata['tags'] = []
+
+                    # Apply search filter
+                    if search_query:
+                        title_match = metadata.get('title', '').lower().find(search_query) != -1
+                        tags_match = any(search_query in tag.lower() for tag in metadata.get('tags', []))
+                        content_match = content.lower().find(search_query) != -1
+                        if not (title_match or tags_match or content_match):
+                            continue
+
+                    html_content = markdown.markdown(content)
+                    notes.append({
+                        'filename': filename,
+                        'content': html_content,
+                        'metadata': metadata
+                    })
+    # Sort notes by date, newest first
+    notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
+    # After the notes list account for search with no matches, we can check if there are results
+    has_results = len(notes) > 0
+    return render_template('notes.html', 
+                         notes=notes, 
+                         search_query=search_query, 
+                         has_results=has_results)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():

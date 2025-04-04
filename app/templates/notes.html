@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+  <div class="container mt-5">
+    <div class="text-center mb-4">
+      <h1 class="display-4 text-primary">
+        <br></br>
+        <pre>
+          ░▒▓███████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓██████████████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓███████▓▒░▒▓████████▓▒░ 
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓██████▓▒░   ░▒▓█▓▒░     
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+          ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░   ░▒▓█▓▒░     
+        </pre>
+      </h1>
+      <br>
+      <!-- Search form -->
+      <div class="search-container mb-4">
+        <form method="GET" action="{{ url_for('notes') }}" class="d-flex justify-content-center">
+          <input type="text" name="search" class="form-control" placeholder="Search notes by title, tags, or content..." value="{{ search_query }}">
+          {% if search_query %}
+            <button type="button" onclick="window.location.href='{{ url_for('notes') }}'" class="btn btn-primary">Clear Search</button>
+          {% else %}
+            <button type="submit" class="btn btn-primary">Search</button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+
+    <div class="notes-container">
+        {% if search_query and not has_results %}
+          <div class="no-results">
+            <p>No items found for search: "{{ search_query }}"</p>
+            <p>Clear the search to show entries</p>
+          </div>
+        {% else %}
+      <!-- Sidebar -->
+      <div class="notes-sidebar">
+        <h3>Table of Contents</h3>
+        <ul class="toc-list">
+          {% for note in notes %}
+            <li>
+              <a href="#note-{{ loop.index }}">
+                {{ note.metadata.title or 'Untitled Note' }}
+                <div class="toc-date">{{ note.metadata.date.strftime('%B %d, %Y') }}</div>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+
+      <!-- Main Content -->
+      <div class="notes-content">
+        {% for note in notes %}
+          <div id="note-{{ loop.index }}" class="card mb-4 note-card">
+            <div class="note-metadata">
+              {% if note.metadata.title %}
+                <h2>{{ note.metadata.title }}</h2>
+              {% endif %}
+              {% if note.metadata.date %}
+                <div class="note-date">{{ note.metadata.date.strftime('%B %d, %Y') }}</div>
+              {% endif %}
+              {% if note.metadata.tags %}
+                <div class="note-tags">
+                  Tags: 
+                  {% for tag in note.metadata.tags %}
+                    <span class="tag">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="note-content">
+              {{ note.content|safe }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+    </div>
+  </div>
+</body>
+</html>
