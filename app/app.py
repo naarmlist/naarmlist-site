@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, abort, Response, session
+from flask import Flask, request, render_template, redirect, url_for, abort, Response, session, send_from_directory
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 import pytz
@@ -305,6 +305,10 @@ def admin_edit(event_id):
 def admin_logout():
     session['admin'] = False
     return redirect(url_for('index'))
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory(os.path.dirname(__file__), 'robots.txt')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
