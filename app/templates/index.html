@@ -36,11 +36,9 @@
       <!-- Search Bar -->
       <div class="card p-4 mb-4 search-container">
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
-          welcome to naarmlist, a curated list of events happening in melbourne
+          welcome to naarmlist, a curated list of events happening in melbourne from the team at <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
           <br></br>
           to add your own event use the link above
-          <br></br>
-          this site is provided by <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
           <br></br>
           for assistance or enquiries email <a href="ijkeleher@outlook.com">ijkeleher@outlook.com</a>
         </p>
@@ -81,9 +79,8 @@
               event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
               ({{ event['datetime'].strftime('%I:%M%p') }})</td>
             <td style="word-wrap: break-word">
-                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">
-                  {{ event['link'] }}
-                </a>
+                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">{{ event['title'] }}</a>
+                @ {{ event['venue'] }}
               </td>
             <td>{{ event['organisers'] }}</td>
             <td>{{ event['tags'] | join(', ') }}</td>
