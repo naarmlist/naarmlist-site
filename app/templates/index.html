@@ -74,14 +74,15 @@
         </thead>
         <tbody>
           {% for event in events %}
+          <!-- Display each event in a table row, some super complicated logic here to render the start date in a readable May 02nd (08:00PM) type format-->
           <tr>
-            <td>{{ event['datetime'].strftime('%a %B %d') }}{% if event['datetime'].day in [1, 21, 31] %}st{% elif
-              event['datetime'].day in [2, 22] %}nd{% elif event['datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
-              ({{ event['datetime'].strftime('%I:%M%p') }})</td>
+            <td>{{ event['start_datetime'].strftime('%a %B %d') }}{% if event['start_datetime'].day in [1, 21, 31] %}st{% elif
+              event['start_datetime'].day in [2, 22] %}nd{% elif event['start_datetime'].day in [3, 23] %}rd{% else %}th{% endif %}
+              ({{ event['start_datetime'].strftime('%I:%M%p') }})</td>
+            <!-- Display the event title and venue, with a link to the event, prepends http to link to leave our site if required -->
             <td style="word-wrap: break-word">
-                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">{{ event['title'] }}</a>
-                @ {{ event['venue'] }}
-              </td>
+                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">{{ event['title'] }}</a> @ {{ event['venue'] }}
+            </td>
             <td>{{ event['organisers'] }}</td>
             <td>{{ event['tags'] | join(', ') }}</td>
             <td>{{ event['artists'] | join(', ') }}</td>

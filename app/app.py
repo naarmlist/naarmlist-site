@@ -34,8 +34,9 @@ def index():
         events = list(db.events.find())
     
     for event in events:
-        event['datetime'] = datetime.fromisoformat(event['datetime'])
-    events.sort(key=lambda x: x['datetime'])
+        event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
+        event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
+    events.sort(key=lambda x: x['start_datetime'])
     return render_template('index.html', events=events, search_query=search_query)
 
 @app.route('/clearEventSearch', methods=['POST'])
@@ -48,19 +49,21 @@ def create_event():
     organisers = request.form['organisers']
     venue = request.form['venue']
     link = request.form['link']
-    datetime_str = request.form['datetime']
+    start_datetime = request.form['start_datetime']
+    end_datetime = request.form['end_datetime']
     tags = request.form['tags'].split(',')
-    artists = request.form['artists'].split(',')  # New: capture artists
+    artists = request.form['artists'].split(',')
 
     db = get_db_connection()
     db.events.insert_one({
-        'datetime': datetime_str,
+        'start_datetime': start_datetime,
+        'end_datetime': end_datetime,
         'title': title,
         'organisers': organisers,
         'venue': venue,
         'link': link,
         'tags': tags,
-        'artists': artists  # New: store artists
+        'artists': artists
     })
 
     return redirect(url_for('index'))
@@ -121,13 +124,13 @@ def calendar_event(event_id):
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
         abort(404)
-    # Parse datetime
-    event_dt = datetime.fromisoformat(event['datetime'])
-    event_end = event_dt + timedelta(hours=1)
-    # Format dates for Google Calendar: YYYYMMDDTHHMMSSZ
-    # For simplicity, assume event_dt is in UTC or use .strftime as is.
-    start_str = event_dt.strftime("%Y%m%dT%H%M%SZ")
-    end_str = event_end.strftime("%Y%m%dT%H%M%SZ")
+    # Parse datetime and set Melbourne timezone
+    start_dt = datetime.fromisoformat(event['start_datetime'])
+    end_dt = datetime.fromisoformat(event['end_datetime'])
+
+    # Format for Google Calendar (removing the Z suffix to prevent UTC interpretation)
+    start_str = start_dt.strftime("%Y%m%dT%H%M%S")
+    end_str = end_dt.strftime("%Y%m%dT%H%M%S")
     gcal_url = ("https://calendar.google.com/calendar/r/eventedit?text=" +
                 f"{event['title']}&dates={start_str}/{end_str}&details={event['link']}&location={event['venue']}")
     # Render minimal HTML with options.
@@ -157,8 +160,8 @@ def ics_file(event_id):
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
         abort(404)
-    event_dt = datetime.fromisoformat(event['datetime'])
-    event_end = event_dt + timedelta(hours=1)
+    start_dt = datetime.fromisoformat(event['start_datetime'])
+    end_dt = datetime.fromisoformat(event['end_datetime'])
     dtstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     ics_content = f"""BEGIN:VCALENDAR
 VERSION:2.0
@@ -166,8 +169,8 @@ PRODID:NaarmList
 BEGIN:VEVENT
 UID:{event_id}@naarm-list
 DTSTAMP:{dtstamp}
-DTSTART:{event_dt.strftime("%Y%m%dT%H%M%SZ")}
-DTEND:{event_end.strftime("%Y%m%dT%H%M%SZ")}
+DTSTART:{start_dt.strftime("%Y%m%dT%H%M%SZ")}
+DTEND:{end_dt.strftime("%Y%m%dT%H%M%SZ")}
 SUMMARY:{event['title']}
 DESCRIPTION:{event['link']}
 LOCATION:{event['venue']}
@@ -266,8 +269,9 @@ def admin_dashboard():
     db = get_db_connection()
     events = list(db.events.find())
     for event in events:
-        event['datetime'] = datetime.fromisoformat(event['datetime'])
-    events.sort(key=lambda x: x['datetime'])
+        event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
+        event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
+    events.sort(key=lambda x: x['start_datetime'])
     return render_template('admin_dashboard.html', events=events)
 
 @app.route('/admin/delete/<event_id>', methods=['POST'])
@@ -289,7 +293,8 @@ def admin_edit(event_id):
             'organisers': request.form['organisers'],
             'venue': request.form['venue'],
             'link': request.form['link'],
-            'datetime': request.form['datetime'],
+            'start_datetime': request.form['start_datetime'],
+            'end_datetime': request.form['end_datetime'],
             'tags': [tag.strip() for tag in request.form['tags'].split(',')],
             'artists': [artist.strip() for artist in request.form['artists'].split(',')]
         }

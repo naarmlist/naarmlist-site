@@ -13,7 +13,8 @@
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>Date & Time</th>
+          <th>Start Time</th>
+          <th>End Time</th>
           <th>Title</th>
           <th>Venue</th>
           <th>Link</th>
@@ -26,7 +27,8 @@
       <tbody>
         {% for event in events %}
         <tr>
-          <td>{{ event['datetime'].strftime('%a %B %d, %I:%M %p') }}</td>
+          <td>{{ event['start_datetime'].strftime('%a %B %d, %I:%M %p') }}</td>
+          <td>{{ event['end_datetime'].strftime('%a %B %d, %I:%M %p') }}</td>
           <td>{{ event['title'] }}</td>
           <td>{{ event['venue'] }}</td>
           <td>
