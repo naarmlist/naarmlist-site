@@ -1,11 +1,10 @@
-from flask import Flask, request, render_template, redirect, url_for, abort, Response, session, send_from_directory
+from flask import Flask, request, render_template, redirect, url_for, abort, Response, session, send_from_directory, send_file
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-import pytz
 import os
 from bson.objectid import ObjectId  # Added for ObjectId conversion
 import markdown
-import re
+import json
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
@@ -318,6 +317,46 @@ def admin_edit(event_id):
         if not event:
             abort(404)
         return render_template('admin_edit.html', event=event)
+
+def export_database():
+    db = get_db_connection()
+    export_data = {
+        'events': list(db.events.find()),
+        'venues': list(db.venues.find()),
+    }
+    
+    for collection in export_data.values():
+        for doc in collection:
+            doc['_id'] = str(doc['_id'])
+    
+    # Create exports directory if it doesn't exist
+    exports_dir = os.path.join(os.path.dirname(__file__), 'exports')
+    if not os.path.exists(exports_dir):
+        os.makedirs(exports_dir)
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = os.path.join(exports_dir, f'db_backup_{timestamp}.json')
+    
+    with open(filename, 'w') as f:
+        json.dump(export_data, f, indent=2, default=str)
+    
+    return filename
+
+@app.route('/admin/export_db')
+def admin_export_db():
+    if not session.get('admin'):
+        abort(403)
+    try:
+        filename = export_database()
+        return send_file(
+            filename,
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=f'naarm_list_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+        )
+    except Exception as e:
+        return f"Export failed: {str(e)}", 500
 
 @app.route('/admin/logout')
 def admin_logout():

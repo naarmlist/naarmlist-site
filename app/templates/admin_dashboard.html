@@ -55,8 +55,13 @@
         {% endfor %}
       </tbody>
     </table>
-    <!-- Log out button which returns us to home and removes privileged access -->
-    <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
+    <div class="admin-actions" style="margin-top: 20px;">
+      <!-- Export db as json (downloads file to local) -->
+      <a href="{{ url_for('admin_export_db') }}" class="btn btn-info">Export Database</a>
+      <br>
+      <!-- Log out button which returns us to home and removes privileged access -->
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
+    </div>
   </div>
 </body>
 </html>
