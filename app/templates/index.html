@@ -61,6 +61,10 @@
     <!-- Table to display all events -->
     <h3 class="text-center">Events</h3>
     <div class="table-responsive">
+      <!-- if there are no events, display a message -->
+      {% if not events %}
+        <p class="text-center">No events found. Clear search to try again.</p>
+      {% endif %}
       <table class="table table-striped">
         <thead>
           <tr>

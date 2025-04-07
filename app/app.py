@@ -45,6 +45,19 @@ def clear_event_search():
 
 @app.route('/createEvent', methods=['POST'])
 def create_event():
+
+    ## Validate the input data
+    if not request.form['title'] or not request.form['start_datetime'] or not request.form['end_datetime']:
+        return "Missing required fields", 400
+    # check end datetime is after start datetime
+    try:
+        start_datetime = datetime.fromisoformat(request.form['start_datetime'])
+        end_datetime = datetime.fromisoformat(request.form['end_datetime'])
+        if end_datetime <= start_datetime:
+            return "End datetime must be after start datetime", 400
+    except ValueError:
+        return "Invalid datetime format", 400
+    
     title = request.form['title']
     organisers = request.form['organisers']
     venue = request.form['venue']
