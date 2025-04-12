@@ -26,7 +26,12 @@
       <br>
       <div class="nav-links">
         <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a> |
-        <a href="{{ url_for('notes') }}" class="btn btn-link">Notes</a>
+        <a href="{{ url_for('notes') }}" class="btn btn-link">Notes</a> |
+        {% if show_past %}
+        <a href="{{ url_for('index') }}" class="btn btn-link">Show Upcoming Events</a>
+        {% else %}
+        <a href="{{ url_for('past_events') }}" class="btn btn-link">Show Past Events</a>
+        {% endif %}
       </div>
     </div>
     <br>
@@ -36,26 +41,40 @@
       <!-- Search Bar -->
       <div class="card p-4 mb-4 search-container">
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
-          welcome to naarmlist, a curated list of events happening in melbourne from the team at <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
+          {% if show_past %}
+          You are viewing <strong>past events</strong> only, to view upcoming events, click the link above
+          {% else %}
+          Welcome to naarmlist, a curated list of events happening in melbourne from the team at <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
           <br></br>
-          to add your own event use the link above
+          To add your own event use the link above
           <br></br>
-          for assistance or enquiries email <a href="ijkeleher@outlook.com">ijkeleher@outlook.com</a>
+          For assistance or enquiries email <a href="ijkeleher@outlook.com">ijkeleher@outlook.com</a>
+          {% endif %}
         </p>
-        <form method="POST" action="{{ url_for('index') if not search_query else url_for('clear_event_search') }}" class="d-flex flex-column align-items-center">
-          <input type="text" name="search" placeholder="Search events" class="form-control mb-3"
-            value="{{ search_query }}">
-          <div class="btn-group">
-            {% if search_query %}
-              <button type="submit" class="btn btn-primary">Clear Search</button>
-            {% else %}
-              <button type="submit" class="btn btn-primary">Search</button>
-            {% endif %}
-          </div>
-        </form>
+        <!-- if we are in a search AND looking at past events only return items that are in the past -->
+        <!-- if we are not in a search AND return ALL past items, with most recent towards the top-->
+        {% if search_query %}
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
-          you can use tags, organisers, artists, venues and event titles as search terms
+          Search results for "{{ search_query }}":
         </p>
+        {% else %}
+        <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
+          You can search for events by title, venue, organiser, artist or tag
+        </p>
+        {% endif %}
+        <!-- Search form -->
+        {% if search_query %}
+          <form method="POST" action="{{ url_for('clear_event_search') }}" class="mb-3">
+            <input type="hidden" name="show_past" value="{{ 'true' if show_past else 'false' }}">
+            <button type="submit" class="btn btn-primary">Clear Search</button>
+          </form>
+        {% else %}
+          <form method="POST" action="{{ url_for('past_events') if show_past else url_for('index') }}">
+            <input type="text" name="search" placeholder="Search events" class="form-control mb-3"
+              value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </form>
+        {% endif %}
       </div>
     </div>
     <!-- Table to display all events -->

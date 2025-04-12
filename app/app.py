@@ -5,6 +5,7 @@ import os
 from bson.objectid import ObjectId  # Added for ObjectId conversion
 import markdown
 import json
+import pytz
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
@@ -18,29 +19,73 @@ def get_db_connection():
 def index():
     db = get_db_connection()
     search_query = ""
+    # Use cutoff time of current time -12 hours for showing "current" events
+    # as events often run overnight and people may want to see events that are still running
+    melbourne_tz = pytz.timezone("Australia/Melbourne")
+    melbourne_now = datetime.now(melbourne_tz)
+    cutofftime = melbourne_now - timedelta(hours=12)
     if request.method == 'POST':
         search_query = request.form['search']
         events = list(db.events.find({
-            '$or': [
-                {'title': {'$regex': search_query, '$options': 'i'}},
-                {'organisers': {'$regex': search_query, '$options': 'i'}},
-                {'venue': {'$regex': search_query, '$options': 'i'}},
-                {'tags': {'$regex': search_query, '$options': 'i'}},
-                {'artists': {'$regex': search_query, '$options': 'i'}}
+            '$and': [
+                {'start_datetime': {'$gte': cutofftime.isoformat()}},  # Only get current/future events
+                {'$or': [
+                    {'title': {'$regex': search_query, '$options': 'i'}},
+                    {'organisers': {'$regex': search_query, '$options': 'i'}},
+                    {'venue': {'$regex': search_query, '$options': 'i'}},
+                    {'tags': {'$regex': search_query, '$options': 'i'}},
+                    {'artists': {'$regex': search_query, '$options': 'i'}}
+                ]}
             ]
         }))
     else:
-        events = list(db.events.find())
+        events = list(db.events.find({'start_datetime': {'$gte': cutofftime.isoformat()}}))
     
     for event in events:
         event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
         event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
     events.sort(key=lambda x: x['start_datetime'])
-    return render_template('index.html', events=events, search_query=search_query)
+    return render_template('index.html', events=events, search_query=search_query, show_past=False)
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
+    show_past = request.form.get('show_past') == 'true'
+    if show_past:
+        return redirect(url_for('past_events'))
     return redirect(url_for('index'))
+
+@app.route('/past', methods=['GET', 'POST'])
+def past_events():
+    db = get_db_connection()
+    search_query = ""
+    
+    # Use cutoff time of current time -12 hours for showing past events
+    melbourne_tz = pytz.timezone("Australia/Melbourne")
+    melbourne_now = datetime.now(melbourne_tz)
+    cutofftime = melbourne_now - timedelta(hours=12)
+
+    if request.method == 'POST':
+        search_query = request.form['search']
+        events = list(db.events.find({
+            '$and': [
+                {'start_datetime': {'$lt': cutofftime.isoformat()}},  # Only get past events
+                {'$or': [
+                    {'title': {'$regex': search_query, '$options': 'i'}},
+                    {'organisers': {'$regex': search_query, '$options': 'i'}},
+                    {'venue': {'$regex': search_query, '$options': 'i'}},
+                    {'tags': {'$regex': search_query, '$options': 'i'}},
+                    {'artists': {'$regex': search_query, '$options': 'i'}}
+                ]}
+            ]
+        }))
+    else:
+        events = list(db.events.find({'start_datetime': {'$lt': cutofftime.isoformat()}}))
+    
+    for event in events:
+        event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
+        event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
+    events.sort(key=lambda x: x['start_datetime'], reverse=True)
+    return render_template('index.html', events=events, search_query=search_query, show_past=True)
 
 @app.route('/createEvent', methods=['POST'])
 def create_event():
