@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unsubscribed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+    <div class="container mt-5 text-center">
+        <h2>You have been unsubscribed</h2>
+        <p>You will no longer receive event updates.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Return to Homepage</a>
+    </div>
+</body>
+</html>
