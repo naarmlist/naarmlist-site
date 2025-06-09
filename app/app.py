@@ -11,6 +11,9 @@ app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
 
 def get_db_connection():
+    # Allow override for testing
+    if hasattr(app, 'db_override') and app.db_override is not None:
+        return app.db_override
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
@@ -123,6 +126,23 @@ def create_event():
         'artists': artists
     })
 
+    # --- Artists Table Management ---
+    for artist in artists:
+        artist_clean = artist.strip()
+        if not artist_clean:
+            continue
+        # Check if artist exists (case-insensitive, trimmed)
+        existing = db.Artists.find_one({
+            'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
+        })
+        if not existing:
+            db.Artists.insert_one({
+                'name': artist_clean,
+                'description': '',
+                'tags': ''
+            })
+    # --- End Artists Table Management ---
+
     return redirect(url_for('index'))
 
 @app.route('/createVenue', methods=['POST'])
@@ -161,18 +181,11 @@ def organisers():
 
 @app.route('/artists', methods=['GET'])
 def artists():
-    """
-    artists We do a bit of magic here to get rid of duplicates and empty strings.
-    """
     db = get_db_connection()
-    artists = db.events.distinct('artists')
-    dedup = []
-    for artist in artists:
-        if artist:
-            dedup.extend([a.strip() for a in artist.split(',')])
-    dedup = list(set(dedup))
-    dedup = sorted(dedup, key=lambda x: x.lower())
-    return render_template('artists.html', artists=dedup)
+    # Fetch all artists, sort alphabetically (case-insensitive)
+    artists = list(db.Artists.find())
+    artists.sort(key=lambda x: x['name'].lower())
+    return render_template('artists.html', artists=artists)
 
 # New route to show calendar options.
 @app.route('/calendar/<event_id>')
@@ -356,6 +369,21 @@ def admin_edit(event_id):
             'artists': [artist.strip() for artist in request.form['artists'].split(',')]
         }
         db.events.update_one({'_id': ObjectId(event_id)}, {'$set': updated_fields}, upsert=True)
+        # --- Artists Table Management for update ---
+        for artist in updated_fields['artists']:
+            artist_clean = artist.strip()
+            if not artist_clean:
+                continue
+            existing = db.Artists.find_one({
+                'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
+            })
+            if not existing:
+                db.Artists.insert_one({
+                    'name': artist_clean,
+                    'description': '',
+                    'tags': ''
+                })
+        # --- End Artists Table Management ---
         return redirect(url_for('admin_dashboard'))
     else:
         event = db.events.find_one({'_id': ObjectId(event_id)})
