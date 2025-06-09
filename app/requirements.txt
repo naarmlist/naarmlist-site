@@ -1,3 +1,4 @@
 Flask==3.1.0
 pymongo==4.11.2
 markdown==3.5.1
+pytz==2025.2

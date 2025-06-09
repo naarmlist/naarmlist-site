@@ -20,3 +20,18 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
+  seed_db:
+    image: mongo:latest
+    depends_on:
+      - db
+    volumes:
+      - ./db_data:/db_data
+      - ./seed_db.sh:/seed_db.sh
+    entrypoint: ["/bin/bash", "/seed_db.sh", "-y"]
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_NAME=${DB_NAME}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASS}
+    profiles: ["seed"]
+    # To run manually: docker-compose --profile seed up seed_db

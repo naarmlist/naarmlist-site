@@ -1,0 +1,1182 @@
+{
+  "events": [
+    {
+      "_id": "67f35bbbf9f7a6e863cf848d",
+      "start_datetime": "2025-05-03T22:00",
+      "end_datetime": "2025-05-04T05:00",
+      "title": "Dystopian Underground 01",
+      "organisers": "AbrasionCollective",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/dystopian-underground-abrasion-vol-1",
+      "tags": [
+        "techno",
+        "industrial",
+        "Total Black",
+        "Instruments Of Discipline",
+        "Bite",
+        "New School",
+        "Machine",
+        "Voltage Records",
+        "Bubblejam",
+        "999"
+      ],
+      "artists": [
+        "Halv Dr\u00f8m",
+        "Composite Cone",
+        "Atonal Structure",
+        "Pharis",
+        "Six12 DJs"
+      ]
+    },
+    {
+      "_id": "67f3f32d460b93f35a8352d0",
+      "start_datetime": "2025-04-19T19:00",
+      "end_datetime": "2025-04-20T03:00",
+      "title": "OP.ART x XTC presents: olesia (UK)",
+      "organisers": "OP.ART, XTC",
+      "venue": "Solace",
+      "link": "https://ra.co/events/2130028",
+      "tags": [
+        "Trance",
+        "Techno"
+      ],
+      "artists": [
+        "olesia",
+        "Tangerine",
+        "Faeryn",
+        "Elle",
+        "k8 m055"
+      ]
+    },
+    {
+      "_id": "67f49aca460b93f35a8352fe",
+      "start_datetime": "2025-04-19T21:00",
+      "end_datetime": "2025-04-20T03:00",
+      "title": "WAN",
+      "organisers": "WAN",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/wan",
+      "tags": [
+        "Techno",
+        "House"
+      ],
+      "artists": [
+        "NJAG",
+        "SCYU",
+        "LOTONG",
+        "+SIX12 DJs"
+      ]
+    },
+    {
+      "_id": "67f5bb89460b93f35a835370",
+      "start_datetime": "2025-04-13T14:00",
+      "end_datetime": "2025-04-14T01:00",
+      "title": "Thread",
+      "organisers": "Makoyana",
+      "venue": "Miscellania",
+      "link": "https://ra.co/events/2118322",
+      "tags": [
+        "Techno"
+      ],
+      "artists": [
+        "Moopie",
+        " Emelyne",
+        " CheahDX",
+        " cz wang",
+        " Ones",
+        " Second Skin",
+        " Venus Flytrap",
+        " DJ Po"
+      ]
+    },
+    {
+      "_id": "67f5d207460b93f35a835387",
+      "start_datetime": "2025-04-11T22:00",
+      "end_datetime": "2025-04-12T01:00",
+      "title": "10 Years of Modern Hypnosis with Sub Basics (UK) & Pugilist",
+      "organisers": "Modern Hypnosis",
+      "venue": "QQQ ST. Park",
+      "link": "https://ra.co/events/2121241",
+      "tags": [
+        "dubstep",
+        "dub techno"
+      ],
+      "artists": [
+        "Sub Basics",
+        "Pugilist"
+      ]
+    },
+    {
+      "_id": "67f62c46460b93f35a8353b0",
+      "start_datetime": "2025-04-09T19:00",
+      "end_datetime": "2025-04-09T22:00",
+      "title": "Masami Kawaguchi",
+      "organisers": "Kasumuen Records",
+      "venue": "Footscray Records",
+      "link": "https://www.facebook.com/events/1365794871512712",
+      "tags": [
+        "Japan",
+        " psych rock",
+        " japan"
+      ],
+      "artists": [
+        "Masami Kawaguchi"
+      ]
+    },
+    {
+      "_id": "67f7c4d3460b93f35a835445",
+      "start_datetime": "2025-04-11T22:00",
+      "end_datetime": "2025-04-12T04:00",
+      "title": "Ancient Methods (Berlin) \u2013 DOOM GEN presents: Exclusive Melbourne Industrial Techno Rave",
+      "organisers": "Doom Gen",
+      "venue": "New Guernica",
+      "link": "https://ra.co/events/2126993",
+      "tags": [
+        "industrial",
+        " techno",
+        " rave",
+        " berlin",
+        " hard techno"
+      ],
+      "artists": [
+        "Ancient Methods",
+        " DJ Kiti",
+        " Amber Arizono",
+        " Nic Brown"
+      ]
+    },
+    {
+      "_id": "67f7c792460b93f35a83544b",
+      "start_datetime": "2025-04-12T20:00",
+      "end_datetime": "2025-04-13T01:00",
+      "title": "DUTTY: STATE OFFF, MEG10, C.FRIM, SHUKO",
+      "organisers": "Dutty Worldwide",
+      "venue": "524 Flinders Street",
+      "link": "https://events.humanitix.com/dutty-state-offf-meg10-c-frim-shuko",
+      "tags": [
+        "bass",
+        " melbourne",
+        " underground",
+        " perth",
+        " afrobeat",
+        " qpoc",
+        " queer"
+      ],
+      "artists": [
+        "Meg10",
+        " State OFFF",
+        " Shuko",
+        " C.FRIM"
+      ]
+    },
+    {
+      "_id": "67f7c8ff460b93f35a83544f",
+      "start_datetime": "2025-04-11T18:00",
+      "end_datetime": "2025-04-11T20:00",
+      "title": "Melbourne Launch of Memo, Issue 3",
+      "organisers": "Memo Review",
+      "venue": "Blindside",
+      "link": "https://www.memoreview.net/events/melbourne-launch-of-memo-issue-3",
+      "tags": [
+        "Slavoj Zizek",
+        " art",
+        " melbourne",
+        " nicholas building"
+      ],
+      "artists": [
+        "Hyena"
+      ]
+    },
+    {
+      "_id": "67f8c719460b93f35a8354ad",
+      "start_datetime": "2025-04-11T11:11",
+      "end_datetime": "2025-04-12T11:11",
+      "title": "NON-DESCRIPT MUSIC EVENT ",
+      "organisers": "-withheld-",
+      "venue": "-withheld-",
+      "link": "-withheld-",
+      "tags": [
+        "Techno"
+      ],
+      "artists": [
+        "ali",
+        " Aaliyah Salem",
+        " DOG",
+        " isayerrr",
+        " dr oogway",
+        " laces",
+        " merdeze"
+      ]
+    },
+    {
+      "_id": "67f9da6f460b93f35a835508",
+      "start_datetime": "2025-04-12T22:00",
+      "end_datetime": "2025-04-13T07:00",
+      "title": "Night Shop presents: Store Room",
+      "organisers": "Night Shop",
+      "venue": "-withheld-",
+      "link": "https://events.humanitix.com/storeroom",
+      "tags": [
+        "Techno",
+        " Bass",
+        " Leftfield",
+        " Alt-club"
+      ],
+      "artists": [
+        "Secret Lineup"
+      ]
+    },
+    {
+      "_id": "67fc7c5c943a39e792b66e27",
+      "start_datetime": "2025-04-17T19:00",
+      "end_datetime": "2025-04-18T01:00",
+      "title": "Timeless",
+      "organisers": "Timeless",
+      "venue": "Killing Time",
+      "link": "https://www.instagram.com/p/DIY181STp-x/?igsh=MWlxdnRtMjExN3E0dg==",
+      "tags": [
+        "lounge",
+        " minimal",
+        " deep"
+      ],
+      "artists": [
+        "Blan\u01ce",
+        " Rev Lon",
+        " Katharine",
+        " Shani",
+        " Timmus",
+        " Jules David"
+      ]
+    },
+    {
+      "_id": "67fca4be943a39e792b66e3e",
+      "start_datetime": "2025-04-19T19:00",
+      "end_datetime": "2025-04-20T01:00",
+      "title": "MDC & Friends",
+      "organisers": "Melbourne Deepcast",
+      "venue": "Keeper Upstairs",
+      "link": "https://ra.co/events/2145324",
+      "tags": [
+        "House",
+        " Downtempo"
+      ],
+      "artists": [
+        "CZ Wang",
+        " Miles Mac",
+        " DJ Possum",
+        " Kamome"
+      ]
+    },
+    {
+      "_id": "67fcfbde943a39e792b66e73",
+      "start_datetime": "2025-04-24T18:00",
+      "end_datetime": "2025-04-25T03:00",
+      "title": "Misc pres. Detroit in Effect (US), Reptant (live), SOVBLKPSSY, Mothafunk, olibusta, DJ Lust Til I Die",
+      "organisers": "Miscellania",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/misc-pres-detroit-in-effect-us-reptant-live-sovblkpssy-mothafunk-olibusta-dj-lust-til-i-die",
+      "tags": [
+        "detroit",
+        " electro",
+        " acid",
+        " techno",
+        " live set"
+      ],
+      "artists": [
+        "Detroit in Effect",
+        " Reptant",
+        " SOVBLKPSSY",
+        " Mothafunk",
+        " olibusta",
+        " DJ Lust Til I Die"
+      ]
+    },
+    {
+      "_id": "67fe73d7943a39e792b67103",
+      "start_datetime": "2025-06-15T11:00",
+      "end_datetime": "2025-06-15T16:00",
+      "title": "Sunbury Radio Record Fair",
+      "organisers": "Sunbury Radio",
+      "venue": "Sunbury Social Club",
+      "link": "https://www.facebook.com/events/1548409149165769/",
+      "tags": [
+        "vinyl",
+        "records"
+      ],
+      "artists": [
+        ""
+      ]
+    },
+    {
+      "_id": "67fe74b0943a39e792b6710d",
+      "start_datetime": "2025-05-10T21:00",
+      "end_datetime": "2025-05-11T06:00",
+      "title": "Bunker presents The End",
+      "organisers": "Bunker",
+      "venue": "Sub Club",
+      "link": "https://megatix.com.au/events/bunker-presents-the-end",
+      "tags": [
+        "techno"
+      ],
+      "artists": [
+        "Connor Wall",
+        " Hannah D",
+        " Hasvat Informant",
+        " Kia",
+        " Nat Salih",
+        " U-KHAN"
+      ]
+    },
+    {
+      "_id": "67fe75a4943a39e792b67111",
+      "start_datetime": "2025-04-26T18:00",
+      "end_datetime": "2025-04-26T22:30",
+      "title": "Misc presents 10 Years of Motion Ward",
+      "organisers": "Miscellania",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/misc-pres-10-years-of-motion-ward-feat-perila-hysterical-love-project-takeo-k-j-js",
+      "tags": [
+        "ambient",
+        " live",
+        " experimental",
+        " downtempo",
+        " noise"
+      ],
+      "artists": [
+        "perila",
+        " Hysterical Love Project",
+        " Takeo.K"
+      ]
+    },
+    {
+      "_id": "67fe771e943a39e792b67117",
+      "start_datetime": "2025-04-27T19:00",
+      "end_datetime": "2025-04-27T23:00",
+      "title": "Hear The Machine #9",
+      "organisers": "Hear The Machine",
+      "venue": "High Note",
+      "link": "https://www.facebook.com/events/2731128370414447/",
+      "tags": [
+        "synthesizer",
+        " drone",
+        " ambient",
+        " noise",
+        " experimental",
+        " art"
+      ],
+      "artists": [
+        "Passepartout Duo",
+        " Vijay Thillaimuthu",
+        " Ai Yamamoto"
+      ]
+    },
+    {
+      "_id": "67fe7879943a39e792b6711b",
+      "start_datetime": "2025-05-18T12:00",
+      "end_datetime": "2025-05-18T16:00",
+      "title": "Crate Digger Record Fair",
+      "organisers": "Crate Digger Record Fair",
+      "venue": "Corner Hotel",
+      "link": "https://www.facebook.com/events/1295361878419638/",
+      "tags": [
+        "vinyl",
+        " records",
+        " record fair"
+      ],
+      "artists": [
+        "-"
+      ]
+    },
+    {
+      "_id": "67fe7ca7943a39e792b67124",
+      "start_datetime": "2025-05-10T19:00",
+      "end_datetime": "2025-05-10T23:00",
+      "title": "Dream Particle",
+      "organisers": "Sleepless Festival",
+      "venue": "Mamma Chen's",
+      "link": "https://events.humanitix.com/dream-particle",
+      "tags": [
+        "live",
+        "synthesizer",
+        "hardware",
+        "ambient",
+        "noise",
+        "drone",
+        "experimental"
+      ],
+      "artists": [
+        "KALAMAYA",
+        "Justin Ashworth",
+        "The Artificial Limb",
+        "Miles Lee"
+      ]
+    },
+    {
+      "_id": "67fe7f24943a39e792b67130",
+      "start_datetime": "2025-04-19T17:00",
+      "end_datetime": "2025-04-19T23:00",
+      "title": "Harrowing",
+      "organisers": "Harrowing",
+      "venue": "Blue Stone Church Art Space",
+      "link": "https://events.humanitix.com/harrowing",
+      "tags": [
+        "experimental",
+        "live",
+        "techno",
+        "ebm",
+        "post-punk",
+        "noise",
+        "industrial"
+      ],
+      "artists": [
+        "Buzz Kull",
+        "Bodies of Divine Infinite",
+        "Eternal Spirit",
+        "Npcede",
+        "Sinister Minister",
+        "Promaja",
+        "Millimeter Wave",
+        "acoldcell"
+      ]
+    },
+    {
+      "_id": "68005155943a39e792b67200",
+      "start_datetime": "2025-05-17T21:00",
+      "end_datetime": "2025-05-18T03:00",
+      "title": "Animal Fair Music",
+      "organisers": "Animal Fair Music",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/animal-fair-music",
+      "tags": [
+        "Deep House"
+      ],
+      "artists": [
+        "BINOFSKI",
+        "Dani Westt",
+        "Horder",
+        "Pobblebonk",
+        "Shani",
+        "wowcow"
+      ]
+    },
+    {
+      "_id": "68008150943a39e792b6723e",
+      "start_datetime": "2025-04-19T12:00",
+      "end_datetime": "2025-04-19T21:00",
+      "title": "Deep Cargo presents: NATURAL BOUNCE",
+      "organisers": "Deep Cargo, Natural Bounce Records",
+      "venue": "Lucky Coq",
+      "link": "https://ra.co/events/2152061",
+      "tags": [
+        "house",
+        " minimal"
+      ],
+      "artists": [
+        "CHARLES-EDDY",
+        " JOHAN ELGSTROM",
+        " Crozier",
+        " Amber Ferraro"
+      ]
+    },
+    {
+      "_id": "680226a1943a39e792b672cd",
+      "start_datetime": "2025-04-24T17:30",
+      "end_datetime": "2025-04-25T03:30",
+      "title": "EarWorm: Launch Party",
+      "organisers": "+SIX12",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/earworm-launch-party",
+      "tags": [
+        "cyberpunk",
+        " jungle",
+        " techno",
+        " 90s"
+      ],
+      "artists": [
+        "TOR2",
+        " Oogway",
+        " MAZUR",
+        " Deejay UFO",
+        " Auricular",
+        " Luke Bruin"
+      ]
+    },
+    {
+      "_id": "68046ac2943a39e792b6737f",
+      "start_datetime": "2025-04-20T18:00",
+      "end_datetime": "2025-04-20T23:00",
+      "title": "HOISZN & FRIENDS",
+      "organisers": "HOISZN, Congee Club, Wilty Meetups, Platform Presents, Nusantao Giftshop, Thread, Asian Cinema Collective",
+      "venue": "Fifty Five Bar",
+      "link": "https://lu.ma/qtx4hl74",
+      "tags": [
+        "-"
+      ],
+      "artists": [
+        "Kurious Kat"
+      ]
+    },
+    {
+      "_id": "68046d63943a39e792b67382",
+      "start_datetime": "2025-05-14T19:30",
+      "end_datetime": "2025-05-14T22:00",
+      "title": "Asian Cinema Collective Presents: Kung Fu Hustle (2004)",
+      "organisers": "Asian Cinema Collective",
+      "venue": "Chinatown Cinema",
+      "link": "https://events.humanitix.com/asian-cinema-collective-presents-kung-fu-hustle-2004",
+      "tags": [
+        "Cinema"
+      ],
+      "artists": [
+        "-"
+      ]
+    },
+    {
+      "_id": "68047aab943a39e792b6738a",
+      "start_datetime": "2025-04-27T14:00",
+      "end_datetime": "2025-04-28T01:00",
+      "title": "Animalia: Season Finale",
+      "organisers": "Animalia",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/animalia-season-finale",
+      "tags": [
+        "-"
+      ],
+      "artists": [
+        "Kia",
+        " Dolly",
+        " Lolo"
+      ]
+    },
+    {
+      "_id": "68047c2e943a39e792b6738d",
+      "start_datetime": "2025-05-02T22:00",
+      "end_datetime": "2025-05-03T03:00",
+      "title": "Klub Kowa B2B Edition",
+      "organisers": "Klub Kowa",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/klub-kowa-b2b-edition?hxchl=hex-pfl",
+      "tags": [
+        "jersey club",
+        " baile funk",
+        " gqom"
+      ],
+      "artists": [
+        "Stevzar",
+        " Rakhi",
+        " Khya",
+        " DB Mercury",
+        " Karani",
+        " Negassa",
+        " Kimboclat",
+        " Immy",
+        " Mon Franco",
+        " Superhot Barbie"
+      ]
+    },
+    {
+      "_id": "68083157943a39e792b6750c",
+      "start_datetime": "2025-05-02T22:00",
+      "end_datetime": "2025-05-03T04:00",
+      "title": "Deep Cargo presents: LiLi Joy",
+      "organisers": "Deep Cargo",
+      "venue": "New Guernica",
+      "link": "https://events.humanitix.com/deep-cargo-ft-lili-joy-4hr-upstairs-at-new-guernica",
+      "tags": [
+        "deep house"
+      ],
+      "artists": [
+        "LiLi Joy",
+        "Crozier"
+      ]
+    },
+    {
+      "_id": "680c51d8943a39e792b67687",
+      "start_datetime": "2025-05-11T19:00",
+      "end_datetime": "2025-05-11T23:00",
+      "title": "+SIX12 presents: STEVE PAN & Hand Clap (LIVE)",
+      "organisers": "+SIX12",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/six12-presents-steve-pan-and-hand-clap-live",
+      "tags": [
+        "electronic",
+        " live set"
+      ],
+      "artists": [
+        "STEVE PAN",
+        " Hand Clap"
+      ]
+    },
+    {
+      "_id": "680ef1b8943a39e792b6775a",
+      "start_datetime": "2025-05-03T14:00",
+      "end_datetime": "2025-05-04T03:00",
+      "title": "Paper-Cuts presents Radart (Live), Wings of D'sire (d-grade & Wingnut), WTP + Skydiver Records",
+      "organisers": "Paper-Cuts",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/paper-cuts-presents-radart-live-wings-of-d-sire-d-grade-and-wingnut-wtp-skydiver-records-takeover-misc-rooftop?hxchl=hex-pfl",
+      "tags": [
+        "Techno"
+      ],
+      "artists": [
+        "Radart",
+        " Wings of D'sire",
+        " WTP",
+        " Skydiver Records",
+        " Otologic",
+        " Mike Wale",
+        " Jezadin"
+      ]
+    },
+    {
+      "_id": "680ef26f943a39e792b6775d",
+      "start_datetime": "2025-05-10T16:00",
+      "end_datetime": "2025-05-11T03:00",
+      "title": "CONFIDE presents: Byron Yeates, Afrodisiac B2B Bertie, Mason TM BSB SMB8",
+      "organisers": "CONFIDE",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/confide-pres-byron-yeates?hxchl=hex-pfl",
+      "tags": [
+        "Techno"
+      ],
+      "artists": [
+        "Byron Yeates",
+        " Afrodisiac",
+        " Bertie",
+        " Mason TM",
+        " SM88",
+        " Luna",
+        " Tong \u6850"
+      ]
+    },
+    {
+      "_id": "680ef3b1943a39e792b67760",
+      "start_datetime": "2025-05-16T19:30",
+      "end_datetime": "2025-05-17T03:00",
+      "title": "NO/GENRE x CURB DANCE with Female Wizard, R Rebeiro, Sinus, Aashofteh, Bohjass & more",
+      "organisers": "NO/GENRE, CURB DANCE",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/no-genre-x-curb-dance-with-female-wizard-r-rebeiro-sinus-aashofteh-bohjass-and-more?hxchl=hex-pfl",
+      "tags": [
+        "Alt-Club"
+      ],
+      "artists": [
+        "Female Wizard",
+        " R.Rebeiro",
+        " Sinus",
+        " Aashofteh",
+        " Bohjass",
+        " Mara Galagher",
+        " Tyler Bain",
+        " Sunday Derham",
+        " Glasoon",
+        " Clara Darcy",
+        " Lewis Denham",
+        " Sachin de Silva",
+        " k8 m055"
+      ]
+    },
+    {
+      "_id": "680ef4fb943a39e792b67764",
+      "start_datetime": "2025-05-17T22:00",
+      "end_datetime": "2025-05-18T03:00",
+      "title": "FINAL GIRL",
+      "organisers": "FINAL GIRL",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/final-girl-with-mon-franco-katayanagi-twins-zalina-superhotbarbie-guhrl?hxchl=hex-pfl",
+      "tags": [
+        "Techno"
+      ],
+      "artists": [
+        "KATAYANAGI TWINS",
+        " ZALINA",
+        " MON FRANCO",
+        " GUHRL",
+        " SUPERHOTBARBIE"
+      ]
+    },
+    {
+      "_id": "680ef56e943a39e792b67767",
+      "start_datetime": "2025-05-24T22:00",
+      "end_datetime": "2025-05-25T03:00",
+      "title": "Butter Sessions presents Sleep D & Kate Miller",
+      "organisers": "Butter Sessions",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/butter-sessions-presents-sleep-d-and-kate-miller?hxchl=hex-pfl",
+      "tags": [
+        "techno",
+        " bass",
+        " house"
+      ],
+      "artists": [
+        "Kate Miller",
+        " Sleep D"
+      ]
+    },
+    {
+      "_id": "680ef5e9943a39e792b6776a",
+      "start_datetime": "2025-05-28T19:00",
+      "end_datetime": "2025-05-28T23:00",
+      "title": "WavyLand & Miscellania pres. Oli XL",
+      "organisers": "WavyLand, Miscellania",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/wavyland-pres-oli-xl?hxchl=hex-pfl",
+      "tags": [
+        "Alt-Club"
+      ],
+      "artists": [
+        "Oli XL"
+      ]
+    },
+    {
+      "_id": "680ef7ed943a39e792b6776d",
+      "start_datetime": "2025-05-31T22:00",
+      "end_datetime": "2025-06-01T03:00",
+      "title": "NYMPHO Presents: ATARANGI + Friends",
+      "organisers": "NYMPHO",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/nympho-presents-atarangi-friends?hxchl=hex-pfl",
+      "tags": [
+        "techno",
+        " house",
+        " alt-club"
+      ],
+      "artists": [
+        "ATARANGI",
+        " DIESEL",
+        " DJ CASPER",
+        " AALIYAH SALEM",
+        " ARI ANGKASA"
+      ]
+    },
+    {
+      "_id": "680ef870943a39e792b67770",
+      "start_datetime": "2025-06-19T19:30",
+      "end_datetime": "2025-06-19T22:00",
+      "title": "Felicia Atkinson & Lisa Lerkenfeldt",
+      "organisers": "-",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/silver-tape-pres-felicia-atkinson-and-lisa-lerkenfeldt?hxchl=hex-pfl",
+      "tags": [
+        "contemporary classical",
+        " ambient"
+      ],
+      "artists": [
+        "Felicia Atkinson",
+        " Lisa Lerkenfeldt"
+      ]
+    },
+    {
+      "_id": "680ef981943a39e792b67774",
+      "start_datetime": "2025-05-09T22:00",
+      "end_datetime": "2025-05-10T03:00",
+      "title": "Chuleo Club X CRRDR",
+      "organisers": "CHULEO CLUB",
+      "venue": "Miscellania",
+      "link": "https://ra.co/events/2107082",
+      "tags": [
+        "Reggaeton",
+        " Latin Bass"
+      ],
+      "artists": [
+        "CRRDR",
+        " Tina Disco",
+        " Haus of Ralph",
+        " Zalina"
+      ]
+    },
+    {
+      "_id": "680effab943a39e792b67779",
+      "start_datetime": "2025-05-11T09:00",
+      "end_datetime": "2025-05-12T02:00",
+      "title": "TOKYO SNAG: POP-UP LAUNCH",
+      "organisers": "Tokyo Snag",
+      "venue": "126 Smith St",
+      "link": "-",
+      "tags": [
+        "pop-up",
+        " hot dogs",
+        " launch party"
+      ],
+      "artists": [
+        "-"
+      ]
+    },
+    {
+      "_id": "680f2494943a39e792b6778c",
+      "start_datetime": "2025-05-09T20:00",
+      "end_datetime": "2025-05-10T03:00",
+      "title": "+SIX12 presents: DEEP COSMIC",
+      "organisers": "+SIX12",
+      "venue": "+SIX12",
+      "link": "https://events.humanitix.com/deep-cosmic",
+      "tags": [
+        "deep house",
+        " deep tech",
+        " tech-house"
+      ],
+      "artists": [
+        "STEVE PAN",
+        " KAMOME"
+      ]
+    },
+    {
+      "_id": "680f59b6943a39e792b677a7",
+      "start_datetime": "2025-05-03T21:00",
+      "end_datetime": "2025-05-04T05:00",
+      "title": "BATTLE ROYALE: BERLIN",
+      "organisers": "AustrAliens",
+      "venue": "My Aeon",
+      "link": "https://www.eventbrite.com.au/e/battle-royale-berlin-tickets-1301768106449?aff=erelexpmlt",
+      "tags": [
+        "peaktime",
+        " techno",
+        " driving",
+        " hypnotic",
+        " berlin-style"
+      ],
+      "artists": [
+        "LEEN",
+        " SAMMY LA MARCA",
+        " NASER",
+        " MAKSWELL",
+        " MINICOOP",
+        " CHARBELL",
+        " TAUREN",
+        " WIZER.",
+        " REZ",
+        " EZRA",
+        " JIAH JOSSLYN",
+        " MIA F\u011aTE"
+      ]
+    },
+    {
+      "_id": "680f9fd6943a39e792b677cd",
+      "start_datetime": "2025-05-01T19:00",
+      "end_datetime": "2025-05-01T23:30",
+      "title": "ALWAYS BASED",
+      "organisers": "KAI CULT",
+      "venue": "Max Watts",
+      "link": "https://tickets.oztix.com.au/outlet/event/8078d519-17c8-441a-b40a-fdb080e59d47?utm_source=Oztix&utm_medium=Website",
+      "tags": [
+        "Punk",
+        " Rave",
+        " Hyperpop",
+        " Indie"
+      ],
+      "artists": [
+        "Tongue Dissolver",
+        " Vanessa Worm",
+        " Kai Cult",
+        " Nabii",
+        " Soft P*rn"
+      ]
+    },
+    {
+      "_id": "681024ce943a39e792b6780e",
+      "start_datetime": "2025-04-29T20:30",
+      "end_datetime": "2025-04-30T01:00",
+      "title": "Make It Up Club",
+      "organisers": "Make It Up Club",
+      "venue": "Bar Open",
+      "link": "https://www.facebook.com/makeitupclub",
+      "tags": [
+        "avant-garde",
+        "experimental"
+      ],
+      "artists": [
+        "Simon J. Karis",
+        "Clinton Green",
+        "Fin Healey",
+        "Ju Shun",
+        "Ash Bates"
+      ]
+    },
+    {
+      "_id": "6810261c943a39e792b67811",
+      "start_datetime": "2025-04-29T23:30",
+      "end_datetime": "2025-04-30T05:00",
+      "title": "NOW.HERE.THIS. LIVE JAZZ",
+      "organisers": "NOW.HERE.THIS",
+      "venue": "The Toff in Town",
+      "link": "https://thetoff.com.au/event/n-h-t/",
+      "tags": [
+        "acid jazz"
+      ],
+      "artists": [
+        "NHT all-star band"
+      ]
+    },
+    {
+      "_id": "6810270d943a39e792b67814",
+      "start_datetime": "2025-04-30T19:00",
+      "end_datetime": "2025-04-30T23:00",
+      "title": "House of Hers",
+      "organisers": "House of Hers",
+      "venue": "Whitehart Bar",
+      "link": "https://www.instagram.com/p/DHxir-iTWwD/?hl=en&img_index=1",
+      "tags": [
+        "House"
+      ],
+      "artists": [
+        "Elise Tali",
+        " Naliita",
+        " Siennah"
+      ]
+    },
+    {
+      "_id": "68108658943a39e792b67842",
+      "start_datetime": "2025-05-23T22:00",
+      "end_datetime": "2025-05-24T03:00",
+      "title": "Crown Ruler pres. Sunju Hargun & DJ MARIA.",
+      "organisers": "Crown Ruler",
+      "venue": "Miscellania",
+      "link": "https://events.humanitix.com/crown-ruler-pres-sunju-hargun-dj-maria?hxchl=hex-pfl",
+      "tags": [
+        "trance",
+        " techno",
+        " ambient",
+        " idm",
+        " hypnotic",
+        " psychedelic techno"
+      ],
+      "artists": [
+        "DJ MARIA.",
+        " Sunju Hargun",
+        " Nak"
+      ]
+    },
+    {
+      "_id": "68108787943a39e792b67845",
+      "start_datetime": "2025-05-14T17:00",
+      "end_datetime": "2025-05-14T23:30",
+      "title": "Tendaberry",
+      "organisers": "MUBI, Miscellania",
+      "venue": "Miscellania",
+      "link": "https://www.instagram.com/p/DJBaBL-qYbg/?igsh=MTI2YjNuaW1pOGkzOQ==",
+      "tags": [
+        "cinema"
+      ],
+      "artists": [
+        "-"
+      ]
+    },
+    {
+      "_id": "68109c17943a39e792b6784f",
+      "start_datetime": "2025-05-18T18:00",
+      "end_datetime": "2025-05-18T21:00",
+      "title": "Before/Nightfall",
+      "organisers": "Before/Nightfall",
+      "venue": "Miscellania",
+      "link": "https://www.instagram.com/p/DIoFpoFJ6l-/?igsh=YTJoZmsxcjk5dHRx",
+      "tags": [
+        "interdisciplinary",
+        " film",
+        " architecture",
+        " digital art",
+        " experimental music",
+        " sculpture"
+      ],
+      "artists": [
+        "Adam Nash",
+        " Andy Miller",
+        " Anh Tran",
+        " Hannah Zhu",
+        " Jake Liu",
+        " Johnny Liang",
+        " Kate Geck",
+        " Khoi Danh Nguyen",
+        " Lester Li",
+        " Liwen Lian",
+        " Liz Lambrou",
+        " Melody Ma",
+        " Phoebe Whitman",
+        " Rosina Yuan",
+        " Suze Anthony",
+        " Shiiin.u",
+        " Tong # Ni",
+        " Yvette Yiran Zhou"
+      ]
+    },
+    {
+      "_id": "6810b570943a39e792b6785b",
+      "start_datetime": "2025-05-09T20:00",
+      "end_datetime": "2025-05-10T01:00",
+      "title": "Froth presents: Paige Julia (NZ)",
+      "organisers": "Froth",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/clubs/212080",
+      "tags": [
+        "bass",
+        " experimental"
+      ],
+      "artists": [
+        "Paige Julia",
+        " Micca",
+        " Wristcontrol",
+        " Lucy Lies",
+        " Kennii T",
+        " uncle graham"
+      ]
+    },
+    {
+      "_id": "6810b68e943a39e792b6785e",
+      "start_datetime": "2025-05-10T20:00",
+      "end_datetime": "2025-05-11T01:00",
+      "title": "Dub Shakedown",
+      "organisers": "Dub Divination",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2140845",
+      "tags": [
+        "heavyweight dub",
+        " reggae",
+        " rub-a-dub"
+      ],
+      "artists": [
+        "Mago Neru",
+        " Dub Koala & Dub Dahlia"
+      ]
+    },
+    {
+      "_id": "6810b6f5943a39e792b67861",
+      "start_datetime": "2025-05-16T19:00",
+      "end_datetime": "2025-05-17T01:00",
+      "title": "OGE Most Wanted",
+      "organisers": "OGE",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2146401",
+      "tags": [
+        "techno",
+        " trance"
+      ],
+      "artists": [
+        "Edgebug",
+        " Shagalicious",
+        " Slimungus",
+        " Lex\u00ef",
+        " Von Phoon",
+        " Ace"
+      ]
+    },
+    {
+      "_id": "6810b773943a39e792b67864",
+      "start_datetime": "2025-05-23T20:00",
+      "end_datetime": "2025-05-24T01:00",
+      "title": "Proxemics x Midnight Request pres. Buunshin (UKF / NL)",
+      "organisers": "Midnight Request",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2137657",
+      "tags": [
+        "dnb"
+      ],
+      "artists": [
+        "BUUNSHIN",
+        " Immerse",
+        " Strafe",
+        " Yash Bansal"
+      ]
+    },
+    {
+      "_id": "6810b804943a39e792b67867",
+      "start_datetime": "2025-05-30T19:00",
+      "end_datetime": "2025-05-31T01:00",
+      "title": "HDC at QQQ St Park",
+      "organisers": "QQQ St. Park, Outer Residents",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2155726",
+      "tags": [
+        "club"
+      ],
+      "artists": [
+        "Cal Masters",
+        " Clancy (2)",
+        " Connor Graham",
+        " ENVY (2)",
+        " Finlay Smith",
+        " Josh Carstens",
+        " Kiara Friend",
+        " Lochie Large",
+        " Morgan Bitters",
+        " Rue",
+        " Safe"
+      ]
+    },
+    {
+      "_id": "6810b860943a39e792b6786a",
+      "start_datetime": "2025-05-31T20:00",
+      "end_datetime": "2025-06-01T02:00",
+      "title": "DUB&DNB IN THE CITY",
+      "organisers": "Sub Culture",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2158523",
+      "tags": [
+        "UKG",
+        " 140",
+        " bass",
+        " dubstep",
+        " and DnB"
+      ],
+      "artists": [
+        "NIIX",
+        " SK4NK",
+        " Ausar",
+        " Hemera"
+      ]
+    },
+    {
+      "_id": "6810b8b5943a39e792b6786d",
+      "start_datetime": "2025-06-14T20:00",
+      "end_datetime": "2025-06-15T01:00",
+      "title": "Run it Red - Jungle/DnB Sessions - Producer Showcase 001",
+      "organisers": "Run it Red",
+      "venue": "QQQ St. Park",
+      "link": "https://ra.co/events/2158861",
+      "tags": [
+        "jungle",
+        " dnb"
+      ],
+      "artists": [
+        "various"
+      ]
+    },
+    {
+      "_id": "68116f0b943a39e792b678c0",
+      "start_datetime": "2025-05-24T21:00",
+      "end_datetime": "2025-05-25T03:00",
+      "title": "GERO",
+      "organisers": "Lunacy, Careful Sounds",
+      "venue": "Fringe Common Rooms",
+      "link": "https://events.humanitix.com/lunacy-and-careful-sounds-presents-gero-klymax-discotheque-id-and-dreems/tickets",
+      "tags": [
+        "tech house"
+      ],
+      "artists": [
+        "Gero",
+        " Dreems"
+      ]
+    },
+    {
+      "_id": "6811ef1d943a39e792b678f4",
+      "start_datetime": "2025-05-24T21:00",
+      "end_datetime": "2025-05-25T05:00",
+      "title": "AMPHI & FRIENDS",
+      "organisers": "AMPHI",
+      "venue": "Angel Music Bar",
+      "link": "https://www.instagram.com/p/DJBVKc6x6yP/?igsh=MW42aWdyc3NmNXZ1MA==",
+      "tags": [
+        "techno",
+        " live set"
+      ],
+      "artists": [
+        "SuKi",
+        " rev lon",
+        " terri",
+        " art",
+        " makoyana",
+        " liv vicariously",
+        " amphi"
+      ]
+    }
+  ],
+  "venues": []
+}

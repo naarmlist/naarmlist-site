@@ -1,0 +1,33 @@
+{
+  "events": [
+    {
+      "_id": "67f35bbbf9f7a6e863cf848d",
+      "start_datetime": "2025-05-03T22:00",
+      "end_datetime": "2025-05-04T05:00",
+      "title": "Dystopian Underground 01",
+      "organisers": "AbrasionCollective",
+      "venue": "Six12",
+      "link": "https://events.humanitix.com/dystopian-underground-abrasion-vol-1",
+      "tags": [
+        "techno",
+        " industrial",
+        " Total Black",
+        " Instruments Of Discipline",
+        " Bite",
+        " New School",
+        " Machine",
+        " Voltage Records",
+        " Bubblejam",
+        " 999"
+      ],
+      "artists": [
+        "Halv Dr\u00f8m",
+        " Composite Cone",
+        " Atonal Structure",
+        " Pharis",
+        " Six12 DJs"
+      ]
+    }
+  ],
+  "venues": []
+}
