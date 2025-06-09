@@ -3,3 +3,6 @@ app/.DS_Store
 app/static/.DS_Store
 .pytest_cache
 __pycache__
+STRAT.md
+.DS_Store
+app/exports/

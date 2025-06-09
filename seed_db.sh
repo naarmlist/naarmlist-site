@@ -57,7 +57,7 @@ if [ ! -f "$BACKUP_FILE" ]; then
   exit 1
 fi
 
-# Use DB_NAME from env if set
+# Use DB_NAME from .env if set
 if [ -n "$DB_NAME" ]; then
   DEFAULT_DB="$DB_NAME"
 fi
@@ -74,10 +74,8 @@ fi
 
 # Extract collections from JSON (assumes top-level keys are collection names)
 COLLECTIONS=$(jq -r 'keys[]' "$BACKUP_FILE")
-
 echo "Seeding database: $DEFAULT_DB from backup file: $BACKUP_FILE" to "$MONGO_HOST:$MONGO_PORT"
 
-# ...existing code...
 for COL in $COLLECTIONS; do
   echo "Importing collection: $COL"
   jq ".\"$COL\"" "$BACKUP_FILE" > "/tmp/${COL}.json"
@@ -92,7 +90,6 @@ for COL in $COLLECTIONS; do
     --file "/tmp/${COL}.json" --jsonArray
   rm "/tmp/${COL}.json"
 done
-# ...existing code...
 
 echo "Database seeding complete."
 echo "\nSample data from each collection in $DEFAULT_DB:" 
