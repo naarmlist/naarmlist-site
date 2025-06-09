@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artist Detail</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-light">
+    <div class="container mt-5">
+      <div class="text-center mb-4">
+        <h1 class="display-4 text-primary">
+          <br></br>
+          <pre>
+            ░▒▓███████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓██████████████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓███████▓▒░▒▓████████▓▒░ 
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓██████▓▒░   ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░   ░▒▓█▓▒░     
+          </pre>
+        </h1>
+        <br>
+      </div>
+
+      <div class="col-md-3 mx-auto">
+        <table class="table table-bordered mx-auto" style="float: none; margin: 0 auto;">
+          <tr><th>{{ artist['name'] }}</th></tr>
+          <tr>
+            <td style="text-align: center;">
+              <div style="white-space: pre-line; word-break: break-word; margin: 0.5em 0.5em 0.5em 0.5em;">
+                {% if artist['description'] %}
+                  {{ artist['description'] }}
+                {% else %}
+                  <span class="text-muted">Please add a bio or description of the musician/dj/band/artist here. Try to include information on when they were first active and any other names they might have performed under!</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+            <tr>
+              <td style="text-align: left;">
+                <div style="margin: 0.5em 0.5em 0.5em 0.5em;">
+                {% if artist['links'] %}
+                  <ul style="padding-left: 1.2em; margin-bottom: 0;">
+                    {% for link in artist['links'] %}
+                      <li style="word-break: break-all; margin-bottom: 0.5em;"><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <span class="text-muted">No links available.</span>
+                {% endif %}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="text-center mt-3">
+        <a href="{{ url_for('edit_artist', artist_id=artist['_id']) }}">Edit</a>
+        <br></br>
+        <a href="{{ url_for('artists') }}" class="btn btn-secondary">Return to Artist Directory</a>
+        <br></br>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+        <br></br>
+    </div>
+  </div>
+</body>
+</html>

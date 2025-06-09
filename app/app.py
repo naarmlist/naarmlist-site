@@ -22,16 +22,16 @@ def get_db_connection():
 def index():
     db = get_db_connection()
     search_query = ""
-    # Use cutoff time of current time -12 hours for showing "current" events
-    # as events often run overnight and people may want to see events that are still running
+    # Use cutoff time of 6 hours past the finish time in Melbourne timezone
+    # This is to ensure we only show events that are still going on or starting soon
     melbourne_tz = pytz.timezone("Australia/Melbourne")
     melbourne_now = datetime.now(melbourne_tz)
-    cutofftime = melbourne_now - timedelta(hours=12)
+    cutofftime = melbourne_now - timedelta(hours=6)
     if request.method == 'POST':
         search_query = request.form['search']
         events = list(db.events.find({
             '$and': [
-                {'start_datetime': {'$gte': cutofftime.isoformat()}},  # Only get current/future events
+                {'end_datetime': {'$gte': cutofftime.isoformat()}},
                 {'$or': [
                     {'title': {'$regex': search_query, '$options': 'i'}},
                     {'organisers': {'$regex': search_query, '$options': 'i'}},
@@ -42,13 +42,36 @@ def index():
             ]
         }))
     else:
-        events = list(db.events.find({'start_datetime': {'$gte': cutofftime.isoformat()}}))
-    
+        events = list(db.events.find({'end_datetime': {'$gte': cutofftime.isoformat()}}))
+
     for event in events:
         event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
         event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
     events.sort(key=lambda x: x['start_datetime'])
-    return render_template('index.html', events=events, search_query=search_query, show_past=False)
+
+    # --- ARTIST LINK LOGIC ---
+    # Collect all unique artist names (case-insensitive, stripped)
+    artist_names = set()
+    for event in events:
+        for artist in event.get('artists', []):
+            artist_names.add(artist.strip().lower())
+    # Fetch all artists from the DB (case-insensitive lookup in Python)
+    artist_docs = list(db.Artists.find())
+    # Build lookup dict (lowercase name -> artist doc)
+    artist_lookup = {a['name'].strip().lower(): a for a in artist_docs}
+    # For each event, build a new list for template
+    for event in events:
+        event['artist_links'] = []
+        for artist in event.get('artists', []):
+            key = artist.strip().lower()
+            artist_doc = artist_lookup.get(key)
+            if artist_doc and artist_doc.get('description', '').strip():
+                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+            else:
+                event['artist_links'].append({'name': artist.strip(), 'id': None})
+    # --- END ARTIST LINK LOGIC ---
+
+    return render_template('index.html', events=events, search_query=search_query, show_past=False, artists=artist_docs)
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
@@ -61,17 +84,15 @@ def clear_event_search():
 def past_events():
     db = get_db_connection()
     search_query = ""
-    
-    # Use cutoff time of current time -12 hours for showing past events
     melbourne_tz = pytz.timezone("Australia/Melbourne")
     melbourne_now = datetime.now(melbourne_tz)
-    cutofftime = melbourne_now - timedelta(hours=12)
+    cutofftime = melbourne_now - timedelta(hours=6)
 
     if request.method == 'POST':
         search_query = request.form['search']
         events = list(db.events.find({
             '$and': [
-                {'start_datetime': {'$lt': cutofftime.isoformat()}},  # Only get past events
+                {'end_datetime': {'$lt': cutofftime.isoformat()}},
                 {'$or': [
                     {'title': {'$regex': search_query, '$options': 'i'}},
                     {'organisers': {'$regex': search_query, '$options': 'i'}},
@@ -82,12 +103,34 @@ def past_events():
             ]
         }))
     else:
-        events = list(db.events.find({'start_datetime': {'$lt': cutofftime.isoformat()}}))
-    
+        events = list(db.events.find({'end_datetime': {'$lt': cutofftime.isoformat()}}))
     for event in events:
         event['start_datetime'] = datetime.fromisoformat(event['start_datetime'])
         event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
     events.sort(key=lambda x: x['start_datetime'], reverse=True)
+
+    # --- ARTIST LINK LOGIC ---
+    # Collect all unique artist names (case-insensitive, stripped)
+    artist_names = set()
+    for event in events:
+        for artist in event.get('artists', []):
+            artist_names.add(artist.strip().lower())
+    # Fetch all artists from the DB (case-insensitive lookup in Python)
+    artist_docs = list(db.Artists.find())
+    # Build lookup dict (lowercase name -> artist doc)
+    artist_lookup = {a['name'].strip().lower(): a for a in artist_docs}
+    # For each event, build a new list for template
+    for event in events:
+        event['artist_links'] = []
+        for artist in event.get('artists', []):
+            key = artist.strip().lower()
+            artist_doc = artist_lookup.get(key)
+            if artist_doc and artist_doc.get('description', '').strip():
+                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+            else:
+                event['artist_links'].append({'name': artist.strip(), 'id': None})
+    # --- END ARTIST LINK LOGIC ---
+
     return render_template('index.html', events=events, search_query=search_query, show_past=True)
 
 @app.route('/createEvent', methods=['POST'])
@@ -111,8 +154,8 @@ def create_event():
     link = request.form['link']
     start_datetime = request.form['start_datetime']
     end_datetime = request.form['end_datetime']
-    tags = request.form['tags'].split(',')
-    artists = request.form['artists'].split(',')
+    tags = [t.strip() for t in request.form['tags'].split(',') if t.strip()]
+    artists = [a.strip() for a in request.form['artists'].split(',') if a.strip()]
 
     db = get_db_connection()
     db.events.insert_one({
@@ -365,8 +408,8 @@ def admin_edit(event_id):
             'link': request.form['link'],
             'start_datetime': request.form['start_datetime'],
             'end_datetime': request.form['end_datetime'],
-            'tags': [tag.strip() for tag in request.form['tags'].split(',')],
-            'artists': [artist.strip() for artist in request.form['artists'].split(',')]
+            'tags': [tag.strip() for tag in request.form['tags'].split(',') if tag.strip()],
+            'artists': [artist.strip() for artist in request.form['artists'].split(',') if artist.strip()]
         }
         db.events.update_one({'_id': ObjectId(event_id)}, {'$set': updated_fields}, upsert=True)
         # --- Artists Table Management for update ---
@@ -381,7 +424,8 @@ def admin_edit(event_id):
                 db.Artists.insert_one({
                     'name': artist_clean,
                     'description': '',
-                    'tags': ''
+                    'tags': '',
+                    'links': []
                 })
         # --- End Artists Table Management ---
         return redirect(url_for('admin_dashboard'))
@@ -439,6 +483,36 @@ def admin_logout():
 @app.route('/robots.txt')
 def robots():
     return send_from_directory(os.path.dirname(__file__), 'robots.txt')
+
+@app.route('/artist/<artist_id>')
+def artist_detail(artist_id):
+    db = get_db_connection()
+    artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
+    if not artist:
+        abort(404)
+    return render_template('artist_detail.html', artist=artist)
+
+@app.route('/artist/<artist_id>/edit', methods=['GET', 'POST'])
+def edit_artist(artist_id):
+    db = get_db_connection()
+    artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
+    if not artist:
+        abort(404)
+    if request.method == 'POST':
+        description = request.form.get('description', '').strip()
+        # Gather all non-blank links from the form
+        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        update_fields = {'description': description}
+        if links:
+            update_fields['links'] = links
+        else:
+            update_fields['links'] = []
+        db.Artists.update_one({'_id': ObjectId(artist_id)}, {'$set': update_fields})
+        return redirect(url_for('artist_detail', artist_id=artist_id))
+    # Ensure links field exists for rendering
+    if 'links' not in artist:
+        artist['links'] = []
+    return render_template('edit_artist.html', artist=artist)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)

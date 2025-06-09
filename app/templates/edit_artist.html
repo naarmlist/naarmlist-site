@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Artist</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    function addLinkField() {
+      const container = document.getElementById('links-container');
+      const div = document.createElement('div');
+      div.className = 'input-group mb-2';
+      div.innerHTML = `<input type="url" name="links" class="form-control" placeholder="http://www.soundcloud.com/username12345">
+        <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>`;
+      container.appendChild(div);
+    }
+  </script>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-5">
+      <div class="text-center mb-4">
+        <h1 class="display-4 text-primary">
+          <br></br>
+          <pre>
+            ░▒▓███████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓███████▓▒░░▒▓██████████████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓███████▓▒░▒▓████████▓▒░ 
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░         ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓██████▓▒░   ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░  ░▒▓█▓▒░     
+            ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░   ░▒▓█▓▒░     
+          </pre>
+        </h1>
+        <br>
+      </div>
+
+  <div class="container mt-5">
+    <h2>Edit Artist: {{ artist['name'] }}</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <br></br>
+        <textarea class="form-control" id="description" name="description" rows="18" placeholder="Please add a bio or description of the musician/dj/band/artist here. Try to include information on when they were first active and any other names they might have performed under!">{{ artist['description'] }}</textarea>
+      </div>
+      <br>
+      <div class="mb-3">
+        <label class="form-label">Links</label>
+        <br></br>
+        <div id="links-container">
+          {% if artist['links'] %}
+            {% for link in artist['links'] %}
+              <div class="input-group mb-2">
+                <input type="url" name="links" class="form-control" value="{{ link }}" placeholder="http://www.soundcloud.com/username12345">
+                <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="input-group mb-2">
+              <input type="url" name="links" class="form-control" placeholder="http://www.soundcloud.com/username12345">
+              <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>
+            </div>
+          {% endif %}
+        </div>
+        <br>
+        <button type="button" class="btn btn-secondary mt-2" onclick="addLinkField()">Add Additional Link</button>
+      </div>
+      <br></br>
+      <button type="submit" class="btn btn-primary mt-3">Publish Edit</button>
+      <a href="{{ url_for('artist_detail', artist_id=artist['_id']) }}" class="btn btn-danger mt-3">Cancel</a>
+    </form>
+    <br>
+  </div>
+</body>
+</html>

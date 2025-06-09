@@ -27,6 +27,7 @@
       <div class="nav-links">
         <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a> |
         <a href="{{ url_for('notes') }}" class="btn btn-link">Notes</a> |
+        <a href="{{ url_for('artists') }}" class="btn btn-link">Artist Directory</a> |
         {% if show_past %}
         <a href="{{ url_for('index') }}" class="btn btn-link">Show Upcoming Events</a>
         {% else %}
@@ -44,7 +45,7 @@
           {% if show_past %}
           You are viewing an archive of <strong>past events</strong> only, to view upcoming events click the link above
           {% else %}
-          Welcome to naarmlist, a curated list of events happening in melbourne from the team at <a href="https://linktr.ee/six12naarm" target="_blank">+Six12</a>
+          Welcome to naarmlist, a curated list of events happening in melbourne from the team at <a href="https://linktr.ee/six12naarm" target="_blank">+SIX12</a>
           <br></br>
           To add your own event use the link above
           <br></br>
@@ -111,7 +112,18 @@
             </td>
             <td>{{ event['organisers'] }}</td>
             <td>{{ event['tags'] | join(', ') }}</td>
-            <td>{{ event['artists'] | join(', ') }}</td>
+            <td>
+              {%- for artist in event['artist_links'] %}
+              <span style="white-space: nowrap;">
+                {%- if artist.id -%}
+                  <a href="{{ url_for('artist_detail', artist_id=artist.id) }}">{{ artist.name }}</a>
+                {%- else -%}
+                  {{ artist.name }}
+                {%- endif -%}
+                {%- if not loop.last %}, {% endif -%}
+              </span>
+              {%- endfor %}
+            </td>
             {% if not show_past %}
             <td>
               <a href="{{ url_for('calendar_event', event_id=event['_id']) }}" target="_blank">(add to calendar)</a>
@@ -129,6 +141,6 @@
     <br>
     <a href="{{ url_for('admin_login') }}" class="btn btn-secondary">Admin Login</a>
   </div>
+  <br>
 </body>
-
 </html>
