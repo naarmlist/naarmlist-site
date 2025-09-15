@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Organisers Directory</title>
+  <title>Edit Venue</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    function addLinkField() {
+      const container = document.getElementById('links-container');
+      const div = document.createElement('div');
+      div.className = 'input-group mb-2';
+      div.innerHTML = `<input type="url" name="links" class="form-control" placeholder="http://venuewebsite.com">
+        <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>`;
+      container.appendChild(div);
+    }
+  </script>
 </head>
-
 <body class="bg-light">
   <div class="container mt-5">
     <div class="text-center mb-4">
@@ -25,49 +33,49 @@
       </h1>
       <br>
     </div>
-
-    <h1 class="mb-4 text-center">Organisers Directory</h1>
-
-    <!-- Organisers Directory -->
-    <div class="card p-4 mb-4 table-responsive">
-      <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Contact</th>
-            <th>Links</th>
-            <th>Edit</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set last_letter = None %}
-          {% for organiser in organisers|sort(attribute='name', case_sensitive=False) %}
-            {% set first_letter = organiser['name'][0]|upper %}
-            {% if first_letter != last_letter %}
-              <tr class="group-header"><td colspan="5"><strong>{{ first_letter }}</strong></td></tr>
-              {% set last_letter = first_letter %}
-            {% endif %}
-            <tr>
-              <td><a href="{{ url_for('organiser_detail', organiser_id=organiser['_id']) }}">{{ organiser['name'] }}</a></td>
-              <td>{{ organiser['description'] }}</td>
-              <td>{{ organiser['contact'] }}</td>
-              <td>
-                {% for link in organiser.get('links', []) %}
-                  <a href="{{ link }}" target="_blank">Link</a>{% if not loop.last %}, {% endif %}
-                {% endfor %}
-              </td>
-              <td><a href="{{ url_for('edit_organiser', organiser_id=organiser['_id']) }}" class="btn btn-sm btn-primary">Edit</a></td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="text-center mt-3">
-      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
-    </div>
+    <h2>Edit Venue: {{ venue['name'] }}</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <br></br>
+        <textarea class="form-control" id="description" name="description" rows="8" placeholder="Please add a description of the venue, its history, and any other relevant details.">{{ venue['description'] }}</textarea>
+      </div>
+      <br>
+      <div class="mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input type="text" class="form-control" id="location" name="location" value="{{ venue['location'] }}" placeholder="Venue address or suburb">
+      </div>
+      <br>
+      <div class="mb-3">
+        <label for="contact" class="form-label">Contact</label>
+        <input type="text" class="form-control" id="contact" name="contact" value="{{ venue['contact'] }}" placeholder="Venue contact info (email, phone, etc)">
+      </div>
+      <br>
+      <div class="mb-3">
+        <label class="form-label">Links</label>
+        <div id="links-container">
+          {% if venue['links'] %}
+            {% for link in venue['links'] %}
+              <div class="input-group mb-2">
+                <input type="url" name="links" class="form-control" value="{{ link }}" placeholder="http://venuewebsite.com">
+                <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="input-group mb-2">
+              <input type="url" name="links" class="form-control" placeholder="http://venuewebsite.com">
+              <button type="button" class="btn btn-danger" onclick="this.parentNode.remove()">Delete Link</button>
+            </div>
+          {% endif %}
+        </div>
+        <br>
+        <button type="button" class="btn btn-secondary mt-2" onclick="addLinkField()">Add Additional Link</button>
+      </div>
+      <br></br>
+      <button type="submit" class="btn btn-primary mt-3">Publish Edit</button>
+      <a href="{{ url_for('venue_detail', venue_id=venue['_id']) }}" class="btn btn-danger mt-3">Cancel</a>
+    </form>
+    <br>
   </div>
 </body>
-
 </html>

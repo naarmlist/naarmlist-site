@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organiser Detail</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h1 class="display-4 text-primary mb-4">{{ organiser['name'] }}</h1>
+    <div class="card p-4 mb-4">
+      <p><strong>Description:</strong> {{ organiser['description'] }}</p>
+      <p><strong>Contact:</strong> {{ organiser['contact'] }}</p>
+      <p><strong>Links:</strong>
+        {% for link in organiser.get('links', []) %}
+          <a href="{{ link }}" target="_blank">Link</a>{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+      <a href="{{ url_for('edit_organiser', organiser_id=organiser['_id']) }}" class="btn btn-primary">Edit Organiser</a>
+    </div>
+    <div class="text-center mt-3">
+      <a href="{{ url_for('organisers') }}" class="btn btn-secondary">Return to Organisers Directory</a>
+    </div>
+  </div>
+</body>
+</html>

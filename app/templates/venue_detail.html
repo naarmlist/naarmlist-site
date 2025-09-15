@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Organisers Directory</title>
+  <title>Venue Detail</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body class="bg-light">
   <div class="container mt-5">
     <div class="text-center mb-4">
@@ -25,49 +23,51 @@
       </h1>
       <br>
     </div>
-
-    <h1 class="mb-4 text-center">Organisers Directory</h1>
-
-    <!-- Organisers Directory -->
-    <div class="card p-4 mb-4 table-responsive">
-      <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Contact</th>
-            <th>Links</th>
-            <th>Edit</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set last_letter = None %}
-          {% for organiser in organisers|sort(attribute='name', case_sensitive=False) %}
-            {% set first_letter = organiser['name'][0]|upper %}
-            {% if first_letter != last_letter %}
-              <tr class="group-header"><td colspan="5"><strong>{{ first_letter }}</strong></td></tr>
-              {% set last_letter = first_letter %}
-            {% endif %}
-            <tr>
-              <td><a href="{{ url_for('organiser_detail', organiser_id=organiser['_id']) }}">{{ organiser['name'] }}</a></td>
-              <td>{{ organiser['description'] }}</td>
-              <td>{{ organiser['contact'] }}</td>
-              <td>
-                {% for link in organiser.get('links', []) %}
-                  <a href="{{ link }}" target="_blank">Link</a>{% if not loop.last %}, {% endif %}
+    <div class="col-md-3 mx-auto">
+      <table class="table table-bordered mx-auto" style="float: none; margin: 0 auto;">
+        <tr><th>{{ venue['name'] }}</th></tr>
+        <tr>
+          <td style="text-align: center;">
+            <div style="white-space: pre-line; word-break: break-word; margin: 0.5em 0.5em 0.5em 0.5em;">
+              {% if venue['description'] %}
+                {{ venue['description'] }}
+              {% else %}
+                <span class="text-muted">No description available.</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Location:</strong> {{ venue['location'] }}</td>
+        </tr>
+        <tr>
+          <td><strong>Contact:</strong> {{ venue['contact'] }}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>Links:</strong>
+            {% if venue.get('links') %}
+              <ul style="padding-left: 1.2em; margin-bottom: 0;">
+                {% for link in venue['links'] %}
+                  <li style="word-break: break-all; margin-bottom: 0.5em;"><a href="{{ link }}" target="_blank">{{ link }}</a></li>
                 {% endfor %}
-              </td>
-              <td><a href="{{ url_for('edit_organiser', organiser_id=organiser['_id']) }}" class="btn btn-sm btn-primary">Edit</a></td>
-            </tr>
-          {% endfor %}
-        </tbody>
+              </ul>
+            {% else %}
+              <span class="text-muted">No links available.</span>
+            {% endif %}
+          </td>
+        </tr>
       </table>
     </div>
-
+    <br>
     <div class="text-center mt-3">
+      <a href="{{ url_for('edit_venue', venue_id=venue['_id']) }}">Edit</a>
+      <br></br>
+      <a href="{{ url_for('venues') }}" class="btn btn-secondary">Return to Venue Directory</a>
+      <br></br>
       <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+      <br></br>
     </div>
   </div>
 </body>
-
 </html>

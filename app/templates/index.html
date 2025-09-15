@@ -28,6 +28,8 @@
         <a href="{{ url_for('add_event') }}" class="btn btn-link">Add an Event</a> |
         <a href="{{ url_for('notes') }}" class="btn btn-link">Notes</a> |
         <a href="{{ url_for('artists') }}" class="btn btn-link">Artist Directory</a> |
+        <a href="{{ url_for('organisers') }}" class="btn btn-link">Organiser Directory</a> |
+        <a href="{{ url_for('venues') }}" class="btn btn-link">Venue Directory</a> |
         {% if show_past %}
         <a href="{{ url_for('index') }}" class="btn btn-link">Show Upcoming Events</a>
         {% else %}
@@ -49,7 +51,7 @@
           <br></br>
           To add your own event use the link above
           <br></br>
-          For assistance or enquiries email <a href="ij.keleher@outlook.com">ij.keleher@outlook.com</a>
+          For assistance or enquiries email <a href="ijkeleher@icloud.com">ijkeleher@icloud.com</a>
           {% endif %}
         </p>
         <!-- if we are in a search AND looking at past events only return items that are in the past -->

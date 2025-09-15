@@ -186,6 +186,39 @@ def create_event():
             })
     # --- End Artists Table Management ---
 
+    # --- Organisers Table Management ---
+    for organiser in [o.strip() for o in organisers.split(',') if o.strip()]:
+        organiser_clean = organiser
+        if not organiser_clean:
+            continue
+        existing = db.Organisers.find_one({
+            'name': {'$regex': f'^{organiser_clean}$', '$options': 'i'}
+        })
+        if not existing:
+            db.Organisers.insert_one({
+                'name': organiser_clean,
+                'description': '',
+                'contact': '',
+                'links': []
+            })
+    # --- End Organisers Table Management ---
+
+    # --- Venues Table Management ---
+    venue_clean = venue.strip()
+    if venue_clean:
+        existing = db.venues.find_one({
+            'name': {'$regex': f'^{venue_clean}$', '$options': 'i'}
+        })
+        if not existing:
+            db.venues.insert_one({
+                'name': venue_clean,
+                'description': '',
+                'location': '',
+                'contact': '',
+                'links': []
+            })
+    # --- End Venues Table Management ---
+
     return redirect(url_for('index'))
 
 @app.route('/createVenue', methods=['POST'])
@@ -219,7 +252,8 @@ def venues():
 @app.route('/organisers', methods=['GET'])
 def organisers():
     db = get_db_connection()
-    organisers = db.events.distinct('organisers')
+    organisers = list(db.Organisers.find())
+    organisers.sort(key=lambda x: x['name'].lower())
     return render_template('organisers.html', organisers=organisers)
 
 @app.route('/artists', methods=['GET'])
@@ -513,6 +547,70 @@ def edit_artist(artist_id):
     if 'links' not in artist:
         artist['links'] = []
     return render_template('edit_artist.html', artist=artist)
+
+@app.route('/organiser/<organiser_id>')
+def organiser_detail(organiser_id):
+    db = get_db_connection()
+    organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
+    if not organiser:
+        abort(404)
+    return render_template('organiser_detail.html', organiser=organiser)
+
+@app.route('/organiser/<organiser_id>/edit', methods=['GET', 'POST'])
+def edit_organiser(organiser_id):
+    db = get_db_connection()
+    organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
+    if not organiser:
+        abort(404)
+    if request.method == 'POST':
+        description = request.form.get('description', '').strip()
+        contact = request.form.get('contact', '').strip()
+        # Gather all non-blank links from the form
+        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        update_fields = {'description': description, 'contact': contact}
+        update_fields['links'] = links if links else []
+        db.Organisers.update_one({'_id': ObjectId(organiser_id)}, {'$set': update_fields})
+        return redirect(url_for('organiser_detail', organiser_id=organiser_id))
+    # Ensure links field exists for rendering
+    if 'links' not in organiser:
+        organiser['links'] = []
+    return render_template('edit_organiser.html', organiser=organiser)
+
+@app.route('/venue/<venue_id>')
+def venue_detail(venue_id):
+    db = get_db_connection()
+    venue = db.venues.find_one({'_id': ObjectId(venue_id)})
+    if not venue:
+        abort(404)
+    # Ensure links field exists for rendering
+    if 'links' not in venue:
+        venue['links'] = []
+    return render_template('venue_detail.html', venue=venue)
+
+@app.route('/venue/<venue_id>/edit', methods=['GET', 'POST'])
+def edit_venue(venue_id):
+    db = get_db_connection()
+    venue = db.venues.find_one({'_id': ObjectId(venue_id)})
+    if not venue:
+        abort(404)
+    if request.method == 'POST':
+        description = request.form.get('description', '').strip()
+        location = request.form.get('location', '').strip()
+        contact = request.form.get('contact', '').strip()
+        # Gather all non-blank links from the form
+        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        update_fields = {
+            'description': description,
+            'location': location,
+            'contact': contact,
+            'links': links if links else []
+        }
+        db.venues.update_one({'_id': ObjectId(venue_id)}, {'$set': update_fields})
+        return redirect(url_for('venue_detail', venue_id=venue_id))
+    # Ensure links field exists for rendering
+    if 'links' not in venue:
+        venue['links'] = []
+    return render_template('edit_venue.html', venue=venue)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
