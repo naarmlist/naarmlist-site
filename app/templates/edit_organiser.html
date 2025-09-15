@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Organiser</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h1 class="display-4 text-primary mb-4">Edit Organiser: {{ organiser['name'] }}</h1>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" name="description" id="description" rows="3">{{ organiser['description'] }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label for="contact" class="form-label">Contact</label>
+        <input type="text" class="form-control" name="contact" id="contact" value="{{ organiser['contact'] }}">
+      </div>
+      <div class="mb-3">
+        <label for="links" class="form-label">Links (one per line)</label>
+        <textarea class="form-control" name="links" id="links" rows="3">{% for link in organiser.get('links', []) %}{{ link }}
+{% endfor %}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('organiser_detail', organiser_id=organiser['_id']) }}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</body>
+</html>
