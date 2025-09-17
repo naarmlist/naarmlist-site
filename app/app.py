@@ -533,6 +533,8 @@ def export_database():
     export_data = {
         'events': list(db.events.find()),
         'venues': list(db.venues.find()),
+        'organisers': list(db.Organisers.find()),
+        'artists': list(db.Artists.find())
     }
     
     for collection in export_data.values():
