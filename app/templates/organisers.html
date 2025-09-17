@@ -24,50 +24,76 @@
         </pre>
       </h1>
       <br>
+      <div class="nav-links">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+      </div>
+      <br>
+      <div class="card p-4 mb-4 search-container">
+        <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
+          Here you can find a list of organisers/promoters/collectives who run events in Naarm (Melbourne).
+        </p>
+      </div>
+    <h3 class="text-center">Organiser Directory</h3>
+    <!-- Alphabet Navigation Bar -->
+    <div class="alphabet-nav mb-3">
+      {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+        <a href="#letter-{{ letter }}" class="alphabet-link">{{ letter }}</a>
+      {% endfor %}
     </div>
-
-    <h1 class="mb-4 text-center">Organisers Directory</h1>
-
-    <!-- Organisers Directory -->
-    <div class="card p-4 mb-4 table-responsive">
-      <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Contact</th>
-            <th>Links</th>
-            <th>Edit</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set last_letter = None %}
-          {% for organiser in organisers|sort(attribute='name', case_sensitive=False) %}
-            {% set first_letter = organiser['name'][0]|upper %}
-            {% if first_letter != last_letter %}
-              <tr class="group-header"><td colspan="5"><strong>{{ first_letter }}</strong></td></tr>
-              {% set last_letter = first_letter %}
-            {% endif %}
-            <tr>
-              <td><a href="{{ url_for('organiser_detail', organiser_id=organiser['_id']) }}">{{ organiser['name'] }}</a></td>
-              <td>{{ organiser['description'] }}</td>
-              <td>{{ organiser['contact'] }}</td>
-              <td>
-                {% for link in organiser.get('links', []) %}
-                  <a href="{{ link }}" target="_blank">Link</a>{% if not loop.last %}, {% endif %}
-                {% endfor %}
-              </td>
-              <td><a href="{{ url_for('edit_organiser', organiser_id=organiser['_id']) }}" class="btn btn-sm btn-primary">Edit</a></td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="text-center mt-3">
-      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
-    </div>
+    <style>
+      .alphabet-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .alphabet-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        transition: background 0.2s, color 0.2s;
+      }
+      .alphabet-link:hover {
+        background: #e6f0ff;
+        color: #0056b3;
+        text-decoration: underline;
+      }
+    </style>
+    <!-- Organisers List -->
+    {% set grouped_organisers = {} %}
+    {% for organiser in organisers|sort(attribute='name', case_sensitive=False) %}
+      {% set letter = organiser['name'][0:1].upper() %}
+      {% if letter not in grouped_organisers %}
+        {% set _ = grouped_organisers.update({letter: []}) %}
+      {% endif %}
+      {% set _ = grouped_organisers[letter].append(organiser) %}
+    {% endfor %}
+    {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+      {% if grouped_organisers[letter] %}
+        <h4 id="letter-{{ letter }}">{{ letter }}</h4>
+        <div class="card p-2 mb-4 table-responsive">
+          <table class="table table-striped table-hover">
+            <tbody>
+              {% for organiser in grouped_organisers[letter] %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('organiser_detail', organiser_id=organiser['_id']) }}">{{ organiser['name'] }}</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    {% endfor %}
   </div>
+  <div>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Return to Main Page</a>
+  </div>
+  <br>
 </body>
-
 </html>
