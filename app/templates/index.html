@@ -110,9 +110,20 @@
               ({{ event['start_datetime'].strftime('%I:%M%p') }})</td>
             <!-- Display the event title and venue, with a link to the event, prepends http to link to leave our site if required -->
             <td style="word-wrap: break-word">
-                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">{{ event['title'] }}</a> @ {{ event['venue'] }}
+                <a href="{{ 'https://' + event['link'] if not event['link'].startswith(('http://', 'https://')) else event['link'] }}" target="_blank">{{ event['title'] }}</a> @
+                {% if event['venue_link'] and event['venue_link']['id'] %}
+                  <a href="{{ url_for('venue_detail', venue_id=event['venue_link']['id']) }}">{{ event['venue_link']['name'] }}</a>
+                {% else %}
+                  {{ event['venue_link']['name'] }}
+                {% endif %}
             </td>
-            <td>{{ event['organisers'] }}</td>
+            <td>
+              {% if event['organiser_link'] and event['organiser_link']['id'] %}
+                <a href="{{ url_for('organiser_detail', organiser_id=event['organiser_link']['id']) }}">{{ event['organiser_link']['name'] }}</a>
+              {% else %}
+                {{ event['organiser_link']['name'] }}
+              {% endif %}
+            </td>
             <td>{{ event['tags'] | join(', ') }}</td>
             <td>
               {%- for artist in event['artist_links'] %}

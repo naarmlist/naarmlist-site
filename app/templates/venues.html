@@ -30,8 +30,6 @@
       <br>
       <div class="card p-4 mb-4 search-container">
         <p class="mt-3" style="border: 1px solid #ddd; padding: 10px;">
-          Welcome to the <strong>naarmlist venue directory</strong>!
-          <br></br>
           Here you can find a list of venues that have hosted events in Naarm (Melbourne).
           <br></br>
           Please note that this is a work in progress, and we are continuously updating the directory and the venue details.
@@ -89,7 +87,6 @@
                   <td>
                     <a href="{{ url_for('venue_detail', venue_id=venue['_id']) }}">{{ venue['name'] }}</a>
                   </td>
-                  <td><a href="{{ url_for('edit_venue', venue_id=venue['_id']) }}">Edit</a></td>
                 </tr>
               {% endfor %}
             </tbody>

@@ -6,6 +6,7 @@ from bson.objectid import ObjectId  # Added for ObjectId conversion
 import markdown
 import json
 import pytz
+import re
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
@@ -71,6 +72,38 @@ def index():
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
 
+    # --- VENUE LINK LOGIC ---
+    # Use MongoDB's collation for case-insensitive and space-insensitive matching
+    # Build a lookup of all venues in the DB, normalized for spaces and case
+    def normalize_name(name):
+        return ' '.join(name.strip().lower().split())
+    
+    venue_docs = list(db.venues.find())
+    venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
+    for event in events:
+        venue_key = normalize_name(event.get('venue', ''))
+        venue_doc = venue_lookup.get(venue_key)
+        if not venue_doc:
+            # Try a fallback: search in MongoDB with collation for case-insensitive and space-insensitive match
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+        if venue_doc and venue_doc.get('description', '').strip():
+            event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
+        else:
+            event['venue_link'] = {'name': event['venue'], 'id': None}
+    # --- END VENUE LINK LOGIC ---
+    organiser_docs = list(db.Organisers.find())
+    organiser_lookup = {normalize_name(o['name']): o for o in organiser_docs}
+    for event in events:
+        organiser_key = normalize_name(event.get('organisers', ''))
+        organiser_doc = organiser_lookup.get(organiser_key)
+        if not organiser_doc:
+            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+        if organiser_doc and organiser_doc.get('description', '').strip():
+            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+        else:
+            event['organiser_link'] = {'name': event['organisers'], 'id': None}
+    # --- END ORGANISER LINK LOGIC ---
+
     return render_template('index.html', events=events, search_query=search_query, show_past=False, artists=artist_docs)
 
 @app.route('/clearEventSearch', methods=['POST'])
@@ -110,16 +143,12 @@ def past_events():
     events.sort(key=lambda x: x['start_datetime'], reverse=True)
 
     # --- ARTIST LINK LOGIC ---
-    # Collect all unique artist names (case-insensitive, stripped)
     artist_names = set()
     for event in events:
         for artist in event.get('artists', []):
             artist_names.add(artist.strip().lower())
-    # Fetch all artists from the DB (case-insensitive lookup in Python)
     artist_docs = list(db.Artists.find())
-    # Build lookup dict (lowercase name -> artist doc)
     artist_lookup = {a['name'].strip().lower(): a for a in artist_docs}
-    # For each event, build a new list for template
     for event in events:
         event['artist_links'] = []
         for artist in event.get('artists', []):
@@ -130,6 +159,36 @@ def past_events():
             else:
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
+
+    # --- VENUE LINK LOGIC ---
+    def normalize_name(name):
+        return ' '.join(name.strip().lower().split())
+    venue_docs = list(db.venues.find())
+    venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
+    for event in events:
+        venue_key = normalize_name(event.get('venue', ''))
+        venue_doc = venue_lookup.get(venue_key)
+        if not venue_doc:
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+        if venue_doc and venue_doc.get('description', '').strip():
+            event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
+        else:
+            event['venue_link'] = {'name': event['venue'], 'id': None}
+    # --- END VENUE LINK LOGIC ---
+
+    # --- ORGANISER LINK LOGIC ---
+    organiser_docs = list(db.Organisers.find())
+    organiser_lookup = {normalize_name(o['name']): o for o in organiser_docs}
+    for event in events:
+        organiser_key = normalize_name(event.get('organisers', ''))
+        organiser_doc = organiser_lookup.get(organiser_key)
+        if not organiser_doc:
+            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+        if organiser_doc and organiser_doc.get('description', '').strip():
+            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+        else:
+            event['organiser_link'] = {'name': event['organisers'], 'id': None}
+    # --- END ORGANISER LINK LOGIC ---
 
     return render_template('index.html', events=events, search_query=search_query, show_past=True)
 
