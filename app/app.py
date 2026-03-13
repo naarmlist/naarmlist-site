@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, abort, Res
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 import os
+import secrets
 from bson.objectid import ObjectId  # Added for ObjectId conversion
 import markdown
 import json
@@ -9,18 +10,21 @@ import pytz
 import re
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
+# Generate a fresh secret key on every startup, admin sessions are invalidated on restart consequently
+app.secret_key = secrets.token_hex(32)
 
 def get_db_connection():
+    """Return the active MongoDB database connection."""
     # Allow override for testing
     if hasattr(app, 'db_override') and app.db_override is not None:
         return app.db_override
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
-        
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """Render the upcoming events listing."""
     db = get_db_connection()
     search_query = ""
     # Use cutoff time of 6 hours past the finish time in Melbourne timezone
@@ -76,8 +80,9 @@ def index():
     # Use MongoDB's collation for case-insensitive and space-insensitive matching
     # Build a lookup of all venues in the DB, normalized for spaces and case
     def normalize_name(name):
+        """Normalize names for loose matching."""
         return ' '.join(name.strip().lower().split())
-    
+
     venue_docs = list(db.venues.find())
     venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
     for event in events:
@@ -108,6 +113,7 @@ def index():
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
+    """Clear the event search and return to the current listing."""
     show_past = request.form.get('show_past') == 'true'
     if show_past:
         return redirect(url_for('past_events'))
@@ -115,6 +121,7 @@ def clear_event_search():
 
 @app.route('/past', methods=['GET', 'POST'])
 def past_events():
+    """Render the past events listing."""
     db = get_db_connection()
     search_query = ""
     melbourne_tz = pytz.timezone("Australia/Melbourne")
@@ -162,6 +169,7 @@ def past_events():
 
     # --- VENUE LINK LOGIC ---
     def normalize_name(name):
+        """Normalize names for loose matching."""
         return ' '.join(name.strip().lower().split())
     venue_docs = list(db.venues.find())
     venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
@@ -194,6 +202,7 @@ def past_events():
 
 @app.route('/createEvent', methods=['POST'])
 def create_event():
+    """Create a new event from form data."""
 
     ## Validate the input data
     if not request.form['title'] or not request.form['start_datetime'] or not request.form['end_datetime']:
@@ -206,7 +215,7 @@ def create_event():
             return "End datetime must be after start datetime", 400
     except ValueError:
         return "Invalid datetime format", 400
-    
+
     title = request.form['title']
     organisers = request.form['organisers']
     venue = request.form['venue']
@@ -282,6 +291,7 @@ def create_event():
 
 @app.route('/createVenue', methods=['POST'])
 def create_venue():
+    """Create a new venue from form data."""
     name = request.form['name']
     description = request.form['description']
     location = request.form['location']
@@ -300,16 +310,19 @@ def create_venue():
 
 @app.route('/addEvent', methods=['GET'])
 def add_event():
+    """Render the add-event form."""
     return render_template('add_event.html')
 
 @app.route('/venues', methods=['GET'])
 def venues():
+    """Render the venues index page."""
     db = get_db_connection()
     venues = db.venues.find()
     return render_template('venues.html', venues=venues)
 
 @app.route('/organisers', methods=['GET'])
 def organisers():
+    """Render the organisers index page."""
     db = get_db_connection()
     organisers = list(db.Organisers.find())
     organisers.sort(key=lambda x: x['name'].lower())
@@ -317,6 +330,7 @@ def organisers():
 
 @app.route('/artists', methods=['GET'])
 def artists():
+    """Render the artists index page."""
     db = get_db_connection()
     # Fetch all artists, sort alphabetically (case-insensitive)
     artists = list(db.Artists.find())
@@ -326,6 +340,7 @@ def artists():
 # New route to show calendar options.
 @app.route('/calendar/<event_id>')
 def calendar_event(event_id):
+    """Render calendar links for an event."""
     db = get_db_connection()
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
@@ -362,6 +377,7 @@ def calendar_event(event_id):
 # New route to generate ICS file.
 @app.route('/ics/<event_id>')
 def ics_file(event_id):
+    """Generate an ICS download for an event."""
     db = get_db_connection()
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
@@ -387,13 +403,14 @@ END:VCALENDAR
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
+    """Render searchable markdown notes."""
     notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
     search_query = ""
     notes = []
-    
+
     if request.method == 'POST' and 'search' in request.form:
         search_query = request.form['search']
-    
+
     if os.path.exists(notes_dir):
         for filename in os.listdir(notes_dir):
             if filename.endswith('.md'):
@@ -412,7 +429,7 @@ def notes():
                                 if ':' in line:
                                     key, value = line.split(':', 1)
                                     metadata[key.strip()] = value.strip()
-                    
+
                     # Convert date string to datetime if present
                     if 'date' in metadata:
                         try:
@@ -446,17 +463,19 @@ def notes():
     # Sort notes by date, newest first
     notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
     has_results = len(notes) > 0
-    return render_template('notes.html', 
-                         notes=notes, 
-                         search_query=search_query, 
+    return render_template('notes.html',
+                         notes=notes,
+                         search_query=search_query,
                          has_results=has_results)
 
 @app.route('/clearNoteSearch', methods=['POST'])
 def clear_note_search():
+    """Clear the notes search query."""
     return redirect(url_for('notes'))
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
+    """Authenticate an admin user."""
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -470,6 +489,7 @@ def admin_login():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
+    """Render the admin dashboard."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -482,6 +502,7 @@ def admin_dashboard():
 
 @app.route('/admin/delete/<event_id>', methods=['POST'])
 def admin_delete(event_id):
+    """Delete an event from the admin dashboard."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -490,6 +511,7 @@ def admin_delete(event_id):
 
 @app.route('/admin/edit/<event_id>', methods=['GET', 'POST'])
 def admin_edit(event_id):
+    """Edit an event from the admin dashboard."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -529,6 +551,7 @@ def admin_edit(event_id):
         return render_template('admin_edit.html', event=event)
 
 def export_database():
+    """Export database collections to a JSON backup file."""
     db = get_db_connection()
     export_data = {
         'events': list(db.events.find()),
@@ -536,27 +559,28 @@ def export_database():
         'organisers': list(db.Organisers.find()),
         'artists': list(db.Artists.find())
     }
-    
+
     for collection in export_data.values():
         for doc in collection:
             doc['_id'] = str(doc['_id'])
-    
+
     # Create exports directory if it doesn't exist
     exports_dir = os.path.join(os.path.dirname(__file__), 'exports')
     if not os.path.exists(exports_dir):
         os.makedirs(exports_dir)
-    
+
     # Generate filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = os.path.join(exports_dir, f'db_backup_{timestamp}.json')
-    
+
     with open(filename, 'w') as f:
         json.dump(export_data, f, indent=2, default=str)
-    
+
     return filename
 
 @app.route('/admin/export_db')
 def admin_export_db():
+    """Download a JSON backup of the database."""
     if not session.get('admin'):
         abort(403)
     try:
@@ -572,15 +596,18 @@ def admin_export_db():
 
 @app.route('/admin/logout')
 def admin_logout():
+    """Log out the current admin session."""
     session['admin'] = False
     return redirect(url_for('index'))
 
 @app.route('/robots.txt')
 def robots():
+    """Serve the robots.txt file."""
     return send_from_directory(os.path.dirname(__file__), 'robots.txt')
 
 @app.route('/artist/<artist_id>')
 def artist_detail(artist_id):
+    """Render the detail page for an artist."""
     db = get_db_connection()
     artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
     if not artist:
@@ -589,6 +616,9 @@ def artist_detail(artist_id):
 
 @app.route('/artist/<artist_id>/edit', methods=['GET', 'POST'])
 def edit_artist(artist_id):
+    """Edit an artist record."""
+    if not session.get('admin'):
+        abort(403)
     db = get_db_connection()
     artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
     if not artist:
@@ -611,6 +641,7 @@ def edit_artist(artist_id):
 
 @app.route('/organiser/<organiser_id>')
 def organiser_detail(organiser_id):
+    """Render the detail page for an organiser."""
     db = get_db_connection()
     organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
     if not organiser:
@@ -619,6 +650,7 @@ def organiser_detail(organiser_id):
 
 @app.route('/organiser/<organiser_id>/edit', methods=['GET', 'POST'])
 def edit_organiser(organiser_id):
+    """Edit an organiser record."""
     db = get_db_connection()
     organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
     if not organiser:
@@ -639,6 +671,7 @@ def edit_organiser(organiser_id):
 
 @app.route('/venue/<venue_id>')
 def venue_detail(venue_id):
+    """Render the detail page for a venue."""
     db = get_db_connection()
     venue = db.venues.find_one({'_id': ObjectId(venue_id)})
     if not venue:
@@ -650,6 +683,7 @@ def venue_detail(venue_id):
 
 @app.route('/venue/<venue_id>/edit', methods=['GET', 'POST'])
 def edit_venue(venue_id):
+    """Edit a venue record."""
     db = get_db_connection()
     venue = db.venues.find_one({'_id': ObjectId(venue_id)})
     if not venue:
