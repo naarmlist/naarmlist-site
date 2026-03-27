@@ -13,6 +13,12 @@ app = Flask(__name__)
 # Generate a fresh secret key on every startup, admin sessions are invalidated on restart consequently
 app.secret_key = secrets.token_hex(32)
 
+REVIEWABLE_COLLECTIONS = {
+    'Artists': {'name_field': 'name'},
+    'venues': {'name_field': 'name'},
+    'Organisers': {'name_field': 'name'}
+}
+
 def get_db_connection():
     """Return the active MongoDB database connection."""
     # Allow override for testing
@@ -21,6 +27,30 @@ def get_db_connection():
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
+
+def enqueue_pending_edit(db, collection_name, payload, target_id=None, lookup_name=None):
+    """Store a pending write request for admin review."""
+    pending_doc = {
+        'collection_name': collection_name,
+        'payload': payload,
+        'target_id': ObjectId(target_id) if target_id else None,
+        'lookup_name': lookup_name.strip() if lookup_name else None,
+        'submitted_at': datetime.utcnow().isoformat(),
+    }
+    db.tmp.insert_one(pending_doc)
+
+def parse_links_input(form):
+    """Parse link inputs from either repeated fields or newline-separated textarea."""
+    raw_links = form.getlist('links')
+    links = []
+    for raw_value in raw_links:
+        if not raw_value:
+            continue
+        for candidate in raw_value.splitlines():
+            cleaned = candidate.strip()
+            if cleaned:
+                links.append(cleaned)
+    return links
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -237,7 +267,7 @@ def create_event():
         'artists': artists
     })
 
-    # --- Artists Table Management ---
+    # --- Artists Table Management (queued for admin approval) ---
     for artist in artists:
         artist_clean = artist.strip()
         if not artist_clean:
@@ -247,14 +277,14 @@ def create_event():
             'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
         })
         if not existing:
-            db.Artists.insert_one({
+            enqueue_pending_edit(db, 'Artists', {
                 'name': artist_clean,
                 'description': '',
                 'tags': ''
-            })
+            }, lookup_name=artist_clean)
     # --- End Artists Table Management ---
 
-    # --- Organisers Table Management ---
+    # --- Organisers Table Management (queued for admin approval) ---
     for organiser in [o.strip() for o in organisers.split(',') if o.strip()]:
         organiser_clean = organiser
         if not organiser_clean:
@@ -263,28 +293,28 @@ def create_event():
             'name': {'$regex': f'^{organiser_clean}$', '$options': 'i'}
         })
         if not existing:
-            db.Organisers.insert_one({
+            enqueue_pending_edit(db, 'Organisers', {
                 'name': organiser_clean,
                 'description': '',
                 'contact': '',
                 'links': []
-            })
+            }, lookup_name=organiser_clean)
     # --- End Organisers Table Management ---
 
-    # --- Venues Table Management ---
+    # --- Venues Table Management (queued for admin approval) ---
     venue_clean = venue.strip()
     if venue_clean:
         existing = db.venues.find_one({
             'name': {'$regex': f'^{venue_clean}$', '$options': 'i'}
         })
         if not existing:
-            db.venues.insert_one({
+            enqueue_pending_edit(db, 'venues', {
                 'name': venue_clean,
                 'description': '',
                 'location': '',
                 'contact': '',
                 'links': []
-            })
+            }, lookup_name=venue_clean)
     # --- End Venues Table Management ---
 
     return redirect(url_for('index'))
@@ -299,13 +329,13 @@ def create_venue():
     link = request.form['link']
 
     db = get_db_connection()
-    db.venues.insert_one({
+    enqueue_pending_edit(db, 'venues', {
         'name': name,
         'description': description,
         'location': location,
         'contact': contact,
         'link': link
-    })
+    }, lookup_name=name)
     return redirect(url_for('venues'))
 
 @app.route('/addEvent', methods=['GET'])
@@ -481,7 +511,7 @@ def admin_login():
         password = request.form['password']
         if username == os.getenv("ADMIN_USER") and password == os.getenv("ADMIN_PASS"):
             session['admin'] = True
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_events'))
         else:
             error = "Invalid credentials"
             return render_template('admin_login.html', error=error)
@@ -489,7 +519,12 @@ def admin_login():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    """Render the admin dashboard."""
+    """Backwards-compatible alias for the admin events page."""
+    return redirect(url_for('admin_events'))
+
+@app.route('/admin/events')
+def admin_events():
+    """Render the admin events page."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -500,6 +535,68 @@ def admin_dashboard():
     events.sort(key=lambda x: x['start_datetime'])
     return render_template('admin_dashboard.html', events=events)
 
+@app.route('/admin/review_edits')
+def admin_review_edits():
+    """Render queued Artist/Venue/Organiser writes for approval."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    pending_edits = list(db.tmp.find().sort('submitted_at', 1))
+    for edit in pending_edits:
+        target_id = edit.get('target_id')
+        edit['target_id_str'] = str(target_id) if target_id else None
+        payload = edit.get('payload', {})
+        edit['object_name'] = payload.get('name') or edit.get('lookup_name') or 'Unnamed'
+    return render_template('admin_review_edits.html', pending_edits=pending_edits)
+
+@app.route('/admin/review_edits/<edit_id>/approve', methods=['POST'])
+def approve_review_edit(edit_id):
+    """Approve a queued write and apply it to the destination collection."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    pending_edit = db.tmp.find_one({'_id': ObjectId(edit_id)})
+    if not pending_edit:
+        abort(404)
+
+    collection_name = pending_edit.get('collection_name')
+    payload = pending_edit.get('payload', {})
+    target_id = pending_edit.get('target_id')
+    lookup_name = pending_edit.get('lookup_name', '')
+
+    if collection_name not in REVIEWABLE_COLLECTIONS:
+        abort(400)
+
+    destination_collection = db[collection_name]
+
+    if target_id:
+        destination_collection.update_one({'_id': target_id}, {'$set': payload}, upsert=True)
+    else:
+        existing = None
+        if lookup_name:
+            existing = destination_collection.find_one({
+                REVIEWABLE_COLLECTIONS[collection_name]['name_field']: {
+                    '$regex': f'^{re.escape(lookup_name)}$',
+                    '$options': 'i'
+                }
+            })
+        if existing:
+            destination_collection.update_one({'_id': existing['_id']}, {'$set': payload})
+        else:
+            destination_collection.insert_one(payload)
+
+    db.tmp.delete_one({'_id': ObjectId(edit_id)})
+    return redirect(url_for('admin_review_edits'))
+
+@app.route('/admin/review_edits/<edit_id>/reject', methods=['POST'])
+def reject_review_edit(edit_id):
+    """Reject a queued write and remove it from the review queue."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    db.tmp.delete_one({'_id': ObjectId(edit_id)})
+    return redirect(url_for('admin_review_edits'))
+
 @app.route('/admin/delete/<event_id>', methods=['POST'])
 def admin_delete(event_id):
     """Delete an event from the admin dashboard."""
@@ -507,7 +604,7 @@ def admin_delete(event_id):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
     db.events.delete_one({'_id': ObjectId(event_id)})
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_events'))
 
 @app.route('/admin/edit/<event_id>', methods=['GET', 'POST'])
 def admin_edit(event_id):
@@ -543,7 +640,7 @@ def admin_edit(event_id):
                     'links': []
                 })
         # --- End Artists Table Management ---
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_events'))
     else:
         event = db.events.find_one({'_id': ObjectId(event_id)})
         if not event:
@@ -557,7 +654,8 @@ def export_database():
         'events': list(db.events.find()),
         'venues': list(db.venues.find()),
         'organisers': list(db.Organisers.find()),
-        'artists': list(db.Artists.find())
+        'artists': list(db.Artists.find()),
+        'tmp': list(db.tmp.find())
     }
 
     for collection in export_data.values():
@@ -625,14 +723,16 @@ def edit_artist(artist_id):
         abort(404)
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {'description': description}
-        if links:
-            update_fields['links'] = links
-        else:
-            update_fields['links'] = []
-        db.Artists.update_one({'_id': ObjectId(artist_id)}, {'$set': update_fields})
+        update_fields['links'] = links if links else []
+        enqueue_pending_edit(
+            db,
+            'Artists',
+            update_fields,
+            target_id=artist_id,
+            lookup_name=artist.get('name', '')
+        )
         return redirect(url_for('artist_detail', artist_id=artist_id))
     # Ensure links field exists for rendering
     if 'links' not in artist:
@@ -658,11 +758,16 @@ def edit_organiser(organiser_id):
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {'description': description, 'contact': contact}
         update_fields['links'] = links if links else []
-        db.Organisers.update_one({'_id': ObjectId(organiser_id)}, {'$set': update_fields})
+        enqueue_pending_edit(
+            db,
+            'Organisers',
+            update_fields,
+            target_id=organiser_id,
+            lookup_name=organiser.get('name', '')
+        )
         return redirect(url_for('organiser_detail', organiser_id=organiser_id))
     # Ensure links field exists for rendering
     if 'links' not in organiser:
@@ -692,15 +797,20 @@ def edit_venue(venue_id):
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {
             'description': description,
             'location': location,
             'contact': contact,
             'links': links if links else []
         }
-        db.venues.update_one({'_id': ObjectId(venue_id)}, {'$set': update_fields})
+        enqueue_pending_edit(
+            db,
+            'venues',
+            update_fields,
+            target_id=venue_id,
+            lookup_name=venue.get('name', '')
+        )
         return redirect(url_for('venue_detail', venue_id=venue_id))
     # Ensure links field exists for rendering
     if 'links' not in venue:

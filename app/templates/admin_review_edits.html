@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Review Edits</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4">Review Edits</h2>
+    <div class="admin-actions" style="margin-bottom: 20px;">
+      <a href="{{ url_for('admin_events') }}" class="btn btn-primary">Manage Events</a>
+      <a href="{{ url_for('admin_review_edits') }}" class="btn btn-warning">Review Edits</a>
+      <a href="{{ url_for('admin_export_db') }}" class="btn btn-info">Export Database</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
+    </div>
+
+    {% if pending_edits %}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Object</th>
+            <th>Collection</th>
+            <th>Contents</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for edit in pending_edits %}
+            <tr>
+              <td>{{ edit['object_name'] }}</td>
+              <td>{{ edit['collection_name'] }}</td>
+              <td>
+                <pre style="white-space: pre-wrap; margin: 0;">{{ edit['payload'] | tojson(indent=2) }}</pre>
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('approve_review_edit', edit_id=edit['_id']) }}" style="display:inline;">
+                  <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('reject_review_edit', edit_id=edit['_id']) }}" style="display:inline; margin-left: 8px;">
+                  <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No pending edits to review.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
