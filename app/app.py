@@ -320,8 +320,12 @@ def artists():
     db = get_db_connection()
     # Fetch all artists, sort alphabetically (case-insensitive)
     artists = list(db.Artists.find())
+    # filter out bio-less artists, but allow admins to still see them
+    if not session.get('admin'):
+        artists = [a for a in artists if a.get('description', '').strip()]
     artists.sort(key=lambda x: x['name'].lower())
     return render_template('artists.html', artists=artists)
+    
 
 # New route to show calendar options.
 @app.route('/calendar/<event_id>')
