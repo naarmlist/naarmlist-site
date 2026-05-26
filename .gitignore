@@ -6,3 +6,5 @@ __pycache__
 STRAT.md
 .DS_Store
 app/exports/
+venv/
+.venv/

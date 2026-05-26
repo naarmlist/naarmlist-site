@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, redirect, url_for, abort, Response, session, send_from_directory, send_file
+from flask import (Flask, request, render_template, redirect, url_for,
+                   abort, Response, session, send_from_directory, send_file)
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 import os
@@ -18,7 +19,6 @@ def get_db_connection():
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
-        
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db_connection()
@@ -77,15 +77,17 @@ def index():
     # Build a lookup of all venues in the DB, normalized for spaces and case
     def normalize_name(name):
         return ' '.join(name.strip().lower().split())
-    
     venue_docs = list(db.venues.find())
     venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
     for event in events:
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            # Try a fallback: search in MongoDB with collation for case-insensitive and space-insensitive match
-            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+            # Try a fallback: search in MongoDB with collation
+            venue_doc = db.venues.find_one(
+                {'name': event.get('venue', '')},
+                collation={'locale': 'en', 'strength': 1}
+            )
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -97,14 +99,19 @@ def index():
         organiser_key = normalize_name(event.get('organisers', ''))
         organiser_doc = organiser_lookup.get(organiser_key)
         if not organiser_doc:
-            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+            organiser_doc = db.Organisers.find_one(
+                {'name': event.get('organisers', '')},
+                collation={'locale': 'en', 'strength': 1}
+            )
         if organiser_doc and organiser_doc.get('description', '').strip():
             event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
             event['organiser_link'] = {'name': event['organisers'], 'id': None}
     # --- END ORGANISER LINK LOGIC ---
 
-    return render_template('index.html', events=events, search_query=search_query, show_past=False, artists=artist_docs)
+    return render_template('index.html', events=events,
+                         search_query=search_query, show_past=False,
+                         artists=artist_docs)
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
@@ -169,7 +176,10 @@ def past_events():
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+            venue_doc = db.venues.find_one(
+                {'name': event.get('venue', '')},
+                collation={'locale': 'en', 'strength': 1}
+            )
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -183,7 +193,10 @@ def past_events():
         organiser_key = normalize_name(event.get('organisers', ''))
         organiser_doc = organiser_lookup.get(organiser_key)
         if not organiser_doc:
-            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+            organiser_doc = db.Organisers.find_one(
+                {'name': event.get('organisers', '')},
+                collation={'locale': 'en', 'strength': 1}
+            )
         if organiser_doc and organiser_doc.get('description', '').strip():
             event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
@@ -196,7 +209,8 @@ def past_events():
 def create_event():
 
     ## Validate the input data
-    if not request.form['title'] or not request.form['start_datetime'] or not request.form['end_datetime']:
+    if (not request.form['title'] or not request.form['start_datetime']
+            or not request.form['end_datetime']):
         return "Missing required fields", 400
     # check end datetime is after start datetime
     try:
@@ -206,7 +220,6 @@ def create_event():
             return "End datetime must be after start datetime", 400
     except ValueError:
         return "Invalid datetime format", 400
-    
     title = request.form['title']
     organisers = request.form['organisers']
     venue = request.form['venue']
@@ -337,8 +350,11 @@ def calendar_event(event_id):
     # Format for Google Calendar (removing the Z suffix to prevent UTC interpretation)
     start_str = start_dt.strftime("%Y%m%dT%H%M%S")
     end_str = end_dt.strftime("%Y%m%dT%H%M%S")
-    gcal_url = ("https://calendar.google.com/calendar/r/eventedit?text=" +
-                f"{event['title']}&dates={start_str}/{end_str}&details={event['link']}&location={event['venue']}")
+    gcal_url = (
+        "https://calendar.google.com/calendar/r/eventedit?text="
+        f"{event['title']}&dates={start_str}/{end_str}"
+        f"&details={event['link']}&location={event['venue']}"
+    )
     # Render minimal HTML with options.
     return f"""
     <!DOCTYPE html>
@@ -353,7 +369,8 @@ def calendar_event(event_id):
         <a href="{gcal_url}" target="_blank">Add to Google Calendar</a>
       </p>
       <p>
-        <a href="{url_for('ics_file', event_id=event_id)}" target="_blank">Download ICS to use in iCalendar</a>
+        <a href="{url_for('ics_file', event_id=event_id)}"
+           target="_blank">Download ICS to use in iCalendar</a>
       </p>
     </body>
     </html>
@@ -383,17 +400,19 @@ LOCATION:{event['venue']}
 END:VEVENT
 END:VCALENDAR
 """
-    return Response(ics_content, mimetype="text/calendar", headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"})
+    return Response(
+        ics_content,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"}
+    )
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
     notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
     search_query = ""
     notes = []
-    
     if request.method == 'POST' and 'search' in request.form:
         search_query = request.form['search']
-    
     if os.path.exists(notes_dir):
         for filename in os.listdir(notes_dir):
             if filename.endswith('.md'):
@@ -412,7 +431,6 @@ def notes():
                                 if ':' in line:
                                     key, value = line.split(':', 1)
                                     metadata[key.strip()] = value.strip()
-                    
                     # Convert date string to datetime if present
                     if 'date' in metadata:
                         try:
@@ -430,9 +448,16 @@ def notes():
 
                     # Apply search filter only if there's a query from POST
                     if search_query:
-                        title_match = metadata.get('title', '').lower().find(search_query.lower()) != -1
-                        tags_match = any(search_query.lower() in tag.lower() for tag in metadata.get('tags', []))
-                        content_match = content.lower().find(search_query.lower()) != -1
+                        title_match = (
+                            metadata.get('title', '').lower().find(search_query.lower()) != -1
+                        )
+                        tags_match = any(
+                            search_query.lower() in tag.lower()
+                            for tag in metadata.get('tags', [])
+                        )
+                        content_match = (
+                            content.lower().find(search_query.lower()) != -1
+                        )
                         if not (title_match or tags_match or content_match):
                             continue
 
@@ -446,9 +471,9 @@ def notes():
     # Sort notes by date, newest first
     notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
     has_results = len(notes) > 0
-    return render_template('notes.html', 
-                         notes=notes, 
-                         search_query=search_query, 
+    return render_template('notes.html',
+                         notes=notes,
+                         search_query=search_query,
                          has_results=has_results)
 
 @app.route('/clearNoteSearch', methods=['POST'])
@@ -501,8 +526,11 @@ def admin_edit(event_id):
             'link': request.form['link'],
             'start_datetime': request.form['start_datetime'],
             'end_datetime': request.form['end_datetime'],
-            'tags': [tag.strip() for tag in request.form['tags'].split(',') if tag.strip()],
-            'artists': [artist.strip() for artist in request.form['artists'].split(',') if artist.strip()]
+            'tags': [tag.strip() for tag in request.form['tags'].split(',')
+                     if tag.strip()],
+            'artists': [artist.strip()
+                       for artist in request.form['artists'].split(',')
+                       if artist.strip()]
         }
         db.events.update_one({'_id': ObjectId(event_id)}, {'$set': updated_fields}, upsert=True)
         # --- Artists Table Management for update ---
@@ -536,23 +564,18 @@ def export_database():
         'organisers': list(db.Organisers.find()),
         'artists': list(db.Artists.find())
     }
-    
     for collection in export_data.values():
         for doc in collection:
             doc['_id'] = str(doc['_id'])
-    
     # Create exports directory if it doesn't exist
     exports_dir = os.path.join(os.path.dirname(__file__), 'exports')
     if not os.path.exists(exports_dir):
         os.makedirs(exports_dir)
-    
     # Generate filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = os.path.join(exports_dir, f'db_backup_{timestamp}.json')
-    
     with open(filename, 'w') as f:
         json.dump(export_data, f, indent=2, default=str)
-    
     return filename
 
 @app.route('/admin/export_db')
