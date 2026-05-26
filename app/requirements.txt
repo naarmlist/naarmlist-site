@@ -3,3 +3,5 @@ pymongo==4.11.2
 markdown==3.8.1
 pytz==2025.2
 pylint==4.0.5
+mongomock==4.3.0
+pytest==9.0.3
