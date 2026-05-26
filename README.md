@@ -2,6 +2,30 @@
 
 A listing service of gigs and events in Melbourne (Naarm)
 
+### Python Development Setup
+
+For local Python development (linting, testing, etc.):
+
+1. **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+
+2. **Activate the virtual environment:**
+    ```bash
+    source venv/bin/activate
+    ```
+
+3. **Install development dependencies:**
+    ```bash
+    pip install -r app/requirements.txt
+    ```
+
+4. **Deactivate when done:**
+    ```bash
+    deactivate
+    ```
+
 ### Instructions
 
 This setup uses `docker-compose` to spin up the mongo backend and web frontend
