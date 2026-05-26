@@ -20,7 +20,6 @@ This setup uses `docker-compose` to spin up the mongo backend and web frontend
     # in bash you can use: echo $my_cool_string | sha256sum
     SECRET_KEY="01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
 
-
     # for db seed script only
     MONGO_HOST="db"
     MONGO_PORT="27017"
