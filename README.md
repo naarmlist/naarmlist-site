@@ -6,22 +6,28 @@ A listing service of gigs and events in Melbourne (Naarm)
 
 For local Python development (linting, testing, etc.):
 
-1. **Create a virtual environment:**
+1. Create a virtual environment
     ```bash
-    python3 -m venv venv
+    python3 -m venv .venv
     ```
 
-2. **Activate the virtual environment:**
+2. Activate the virtual environment:
     ```bash
-    source venv/bin/activate
+    source .venv/bin/activate
     ```
 
-3. **Install development dependencies:**
+3. Install development dependencies
     ```bash
     pip install -r app/requirements.txt
     ```
 
-4. **Deactivate when done:**
+4. Testing and Linting
+    ```bash
+    pytest -v app/test_*.py
+    pylint app/*.py
+    ```
+
+ 5. Deactivate when done
     ```bash
     deactivate
     ```
