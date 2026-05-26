@@ -16,6 +16,11 @@ This setup uses `docker-compose` to spin up the mongo backend and web frontend
     DB_NAME="gigsdb"
     DB_URL="mongodb://db:27017/"
 
+    # Flask session secret key - MUST be kept secret but can be anything you want, best to randomly generate it
+    # in bash you can use: echo $my_cool_string | sha256sum
+    SECRET_KEY="01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+
+
     # for db seed script only
     MONGO_HOST="db"
     MONGO_PORT="27017"
