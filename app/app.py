@@ -9,7 +9,12 @@ import pytz
 import re
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
+
+# Load secret key from environment variable
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable must be set")
+app.secret_key = SECRET_KEY
 
 def get_db_connection():
     # Allow override for testing

@@ -14,6 +14,7 @@ services:
       - DB_NAME=${DB_NAME}
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASS}
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - ./app:/app            # Optional: Mount the app directory for live changes
   db:
