@@ -8,8 +8,14 @@
 <body class="bg-light">
   <div class="container mt-5">
     <h2 class="mb-4">Admin Dashboard</h2>
+    <div class="admin-actions" style="margin-bottom: 20px;">
+      <a href="{{ url_for('admin_events') }}" class="btn btn-primary">Manage Events</a>
+      <a href="{{ url_for('admin_review_edits') }}" class="btn btn-warning">Review Edits</a>
+      <a href="{{ url_for('admin_export_db') }}" class="btn btn-info">Export Database</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
+    </div>
     <!-- Table to display all events -->
-     <h3>Events</h3>
+     <h3>Manage Events</h3>
     <table class="table table-striped">
       <thead>
         <tr>
@@ -55,13 +61,6 @@
         {% endfor %}
       </tbody>
     </table>
-    <div class="admin-actions" style="margin-top: 20px;">
-      <!-- Export db as json (downloads file to local) -->
-      <a href="{{ url_for('admin_export_db') }}" class="btn btn-info">Export Database</a>
-      <br>
-      <!-- Log out button which returns us to home and removes privileged access -->
-      <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">Log Out</a>
-    </div>
   </div>
 </body>
 </html>

@@ -41,7 +41,7 @@ def test_directory_entries_added_on_event_creation(client):
         assert a['tags'] == ''
     assert db.Organisers.find_one({'name': 'Org1'})['description'] == ''
     assert db.venues.find_one({'name': 'Venue1'})['description'] == ''
-    assert db.pending_edits.count_documents({}) == 0
+    assert db.tmp.count_documents({}) == 0
 
 def test_artist_not_duplicated(client):
     db = get_db_connection()
@@ -58,9 +58,32 @@ def test_artist_not_duplicated(client):
         'artists': ' sun araw '
     }, follow_redirects=True)
     assert response.status_code == 200
-    # Should still only be one Sun Araw
+    # Should still only be one Sun Araw in the destination table
     all_artists = list(db.Artists.find({'name': {'$regex': '^Sun Araw$', '$options': 'i'}}))
     assert len(all_artists) == 1
+    assert db.tmp.count_documents({'collection_name': 'Artists'}) == 0
+
+def test_approve_pending_artist_edit(client):
+    db = get_db_connection()
+    artist_id = db.Artists.insert_one({'name': 'Alpha', 'description': '', 'tags': ''}).inserted_id
+    pending_id = db.tmp.insert_one({
+        'collection_name': 'Artists',
+        'payload': {'description': 'Updated bio', 'links': ['https://example.com/alpha']},
+        'target_id': artist_id,
+        'lookup_name': 'Alpha',
+        'submitted_at': '2026-03-27T00:00:00'
+    }).inserted_id
+
+    with client.session_transaction() as sess:
+        sess['admin'] = True
+
+    response = client.post(f'/admin/review_edits/{pending_id}/approve', follow_redirects=True)
+    assert response.status_code == 200
+
+    updated = db.Artists.find_one({'_id': artist_id})
+    assert updated['description'] == 'Updated bio'
+    assert updated['links'] == ['https://example.com/alpha']
+    assert db.tmp.find_one({'_id': pending_id}) is None
 
 def test_artists_page_table(client):
     db = get_db_connection()
@@ -95,13 +118,12 @@ def test_artist_edit_is_queued_for_review(client):
     assert 'Your edit is currently under review.' in html
     artist = db.Artists.find_one({'_id': artist_id})
     assert artist['description'] == ''
-    pending_edit = db.pending_edits.find_one({
+    pending_edit = db.tmp.find_one({
         'collection_name': 'Artists',
-        'target_id': str(artist_id)
+        'target_id': artist_id
     })
     assert pending_edit['lookup_name'] == 'Sun Araw'
-    assert pending_edit['status'] == 'pending'
-    assert pending_edit['update_fields'] == {
+    assert pending_edit['payload'] == {
         'description': 'A bio awaiting review.',
         'links': ['https://example.com']
     }
@@ -138,20 +160,20 @@ def test_organiser_and_venue_edits_are_queued_for_review(client):
     assert venue_response.status_code == 200
     assert db.Organisers.find_one({'_id': organiser_id})['description'] == ''
     assert db.venues.find_one({'_id': venue_id})['description'] == ''
-    organiser_edit = db.pending_edits.find_one({
+    organiser_edit = db.tmp.find_one({
         'collection_name': 'Organisers',
-        'target_id': str(organiser_id)
+        'target_id': organiser_id
     })
-    venue_edit = db.pending_edits.find_one({
+    venue_edit = db.tmp.find_one({
         'collection_name': 'venues',
-        'target_id': str(venue_id)
+        'target_id': venue_id
     })
-    assert organiser_edit['update_fields'] == {
+    assert organiser_edit['payload'] == {
         'description': 'Organiser description',
         'contact': 'hello@example.com',
         'links': ['https://org.example', 'https://org.example/social']
     }
-    assert venue_edit['update_fields'] == {
+    assert venue_edit['payload'] == {
         'description': 'Venue description',
         'location': 'Brunswick',
         'contact': 'venue@example.com',
