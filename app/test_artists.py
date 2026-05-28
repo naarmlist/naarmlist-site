@@ -1,26 +1,26 @@
+"""Tests for artist functionality in the application."""
+# pylint: disable=import-error,redefined-outer-name
 import pytest
-from flask import Flask
-from app import app as flask_app, get_db_connection
 import mongomock
-import os
-import tempfile
+from app import app, get_db_connection
 
 @pytest.fixture
 def client(monkeypatch):
+    """Create a test client with mocked MongoDB."""
     # Use mongomock for MongoDB
     mock_client = mongomock.MongoClient()
     db = mock_client['testdb']
     monkeypatch.setenv('DB_URL', 'mongodb://localhost')
     monkeypatch.setenv('DB_NAME', 'testdb')
     # Patch get_db_connection to use mongomock via app.db_override
-    from app import app as real_app
-    real_app.db_override = db
-    real_app.config['TESTING'] = True
-    with real_app.test_client() as client:
-        yield client
-    real_app.db_override = None
+    app.db_override = db
+    app.config['TESTING'] = True
+    with app.test_client() as test_client:
+        yield test_client
+    app.db_override = None
 
 def test_artist_added_on_event_creation(client):
+    """Test that artists are added when creating an event."""
     # Post a new event with a new artist
     response = client.post('/createEvent', data={
         'title': 'Test Event',
@@ -45,6 +45,7 @@ def test_artist_added_on_event_creation(client):
         assert a['tags'] == ''
 
 def test_artist_not_duplicated(client):
+    """Test that artists are not duplicated (case-insensitive)."""
     db = get_db_connection()
     db.Artists.insert_one({'name': 'Sun Araw', 'description': '', 'tags': ''})
     # Post event with same artist, different case and spaces
@@ -64,6 +65,7 @@ def test_artist_not_duplicated(client):
     assert len(all_artists) == 1
 
 def test_artists_page_table(client):
+    """Test that the artists page displays the table correctly."""
     db = get_db_connection()
     db.Artists.insert_many([
         {'name': 'Alpha', 'description': '', 'tags': ''},
