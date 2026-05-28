@@ -1,9 +1,6 @@
 import pytest
-from flask import Flask
-from app import app as flask_app, get_db_connection
+from app import get_db_connection
 import mongomock
-import os
-import tempfile
 
 @pytest.fixture
 def client(monkeypatch):
@@ -20,7 +17,7 @@ def client(monkeypatch):
         yield client
     real_app.db_override = None
 
-def test_artist_added_on_event_creation(client):
+def test_directory_entries_added_on_event_creation(client):
     # Post a new event with a new artist
     response = client.post('/createEvent', data={
         'title': 'Test Event',
@@ -34,15 +31,17 @@ def test_artist_added_on_event_creation(client):
     }, follow_redirects=True)
     assert response.status_code == 200
     db = get_db_connection()
-    # Artists should be added, trimmed, and case-insensitive
+    # Blank directory entries should be added directly, trimmed, and without review.
     all_artists = list(db.Artists.find())
     names = [a['name'] for a in all_artists]
     assert 'Sun Araw' in names
     assert 'Another Artist' in names
-    # Description and tags should be blank
     for a in all_artists:
         assert a['description'] == ''
         assert a['tags'] == ''
+    assert db.Organisers.find_one({'name': 'Org1'})['description'] == ''
+    assert db.venues.find_one({'name': 'Venue1'})['description'] == ''
+    assert db.pending_edits.count_documents({}) == 0
 
 def test_artist_not_duplicated(client):
     db = get_db_connection()
@@ -72,11 +71,89 @@ def test_artists_page_table(client):
     ])
     response = client.get('/artists')
     html = response.data.decode()
-    # Table headers
-    assert '<th>Artist</th>' in html
-    assert '<th>Description</th>' in html
-    assert '<th>Tags</th>' in html
-    # Edit link for blank description
-    assert html.count('edit this entry') >= 1
+    assert 'Artist Directory' in html
+    assert 'edit this page' not in html
     # Sorted order
     assert html.index('Alpha') < html.index('Bravo') < html.index('Charlie')
+
+def test_artist_edit_is_queued_for_review(client):
+    db = get_db_connection()
+    artist_id = db.Artists.insert_one({
+        'name': 'Sun Araw',
+        'description': '',
+        'tags': '',
+        'links': []
+    }).inserted_id
+
+    response = client.post(f'/artist/{artist_id}/edit', data={
+        'description': 'A bio awaiting review.',
+        'links': ['https://example.com', '']
+    }, follow_redirects=True)
+
+    assert response.status_code == 200
+    html = response.data.decode()
+    assert 'Your edit is currently under review.' in html
+    artist = db.Artists.find_one({'_id': artist_id})
+    assert artist['description'] == ''
+    pending_edit = db.pending_edits.find_one({
+        'collection_name': 'Artists',
+        'target_id': str(artist_id)
+    })
+    assert pending_edit['lookup_name'] == 'Sun Araw'
+    assert pending_edit['status'] == 'pending'
+    assert pending_edit['update_fields'] == {
+        'description': 'A bio awaiting review.',
+        'links': ['https://example.com']
+    }
+
+def test_organiser_and_venue_edits_are_queued_for_review(client):
+    db = get_db_connection()
+    organiser_id = db.Organisers.insert_one({
+        'name': 'Org1',
+        'description': '',
+        'contact': '',
+        'links': []
+    }).inserted_id
+    venue_id = db.venues.insert_one({
+        'name': 'Venue1',
+        'description': '',
+        'location': '',
+        'contact': '',
+        'links': []
+    }).inserted_id
+
+    organiser_response = client.post(f'/organiser/{organiser_id}/edit', data={
+        'description': 'Organiser description',
+        'contact': 'hello@example.com',
+        'links': 'https://org.example\n\nhttps://org.example/social'
+    }, follow_redirects=True)
+    venue_response = client.post(f'/venue/{venue_id}/edit', data={
+        'description': 'Venue description',
+        'location': 'Brunswick',
+        'contact': 'venue@example.com',
+        'links': ['https://venue.example', '']
+    }, follow_redirects=True)
+
+    assert organiser_response.status_code == 200
+    assert venue_response.status_code == 200
+    assert db.Organisers.find_one({'_id': organiser_id})['description'] == ''
+    assert db.venues.find_one({'_id': venue_id})['description'] == ''
+    organiser_edit = db.pending_edits.find_one({
+        'collection_name': 'Organisers',
+        'target_id': str(organiser_id)
+    })
+    venue_edit = db.pending_edits.find_one({
+        'collection_name': 'venues',
+        'target_id': str(venue_id)
+    })
+    assert organiser_edit['update_fields'] == {
+        'description': 'Organiser description',
+        'contact': 'hello@example.com',
+        'links': ['https://org.example', 'https://org.example/social']
+    }
+    assert venue_edit['update_fields'] == {
+        'description': 'Venue description',
+        'location': 'Brunswick',
+        'contact': 'venue@example.com',
+        'links': ['https://venue.example']
+    }

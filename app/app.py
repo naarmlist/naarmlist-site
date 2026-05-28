@@ -22,6 +22,28 @@ def get_db_connection():
     db = client[os.getenv("DB_NAME")]
     return db
 
+def enqueue_pending_edit(db, collection_name, update_fields, target_id=None, lookup_name=''):
+    """Queue a public directory edit for later admin review."""
+    db.pending_edits.insert_one({
+        'collection_name': collection_name,
+        'target_id': str(target_id) if target_id else None,
+        'lookup_name': lookup_name,
+        'update_fields': update_fields,
+        'status': 'pending',
+        'created_at': datetime.utcnow().isoformat()
+    })
+
+def parse_links_from_form():
+    """Return non-blank links from either repeated inputs or newline textareas."""
+    links = []
+    for raw_links in request.form.getlist('links'):
+        links.extend(link.strip() for link in raw_links.splitlines() if link.strip())
+    return links
+
+def case_insensitive_name_query(name):
+    """Build an exact case-insensitive name query with escaped user input."""
+    return {'name': {'$regex': f'^{re.escape(name)}$', '$options': 'i'}}
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Render the upcoming events listing."""
@@ -243,9 +265,7 @@ def create_event():
         if not artist_clean:
             continue
         # Check if artist exists (case-insensitive, trimmed)
-        existing = db.Artists.find_one({
-            'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
-        })
+        existing = db.Artists.find_one(case_insensitive_name_query(artist_clean))
         if not existing:
             db.Artists.insert_one({
                 'name': artist_clean,
@@ -259,9 +279,7 @@ def create_event():
         organiser_clean = organiser
         if not organiser_clean:
             continue
-        existing = db.Organisers.find_one({
-            'name': {'$regex': f'^{organiser_clean}$', '$options': 'i'}
-        })
+        existing = db.Organisers.find_one(case_insensitive_name_query(organiser_clean))
         if not existing:
             db.Organisers.insert_one({
                 'name': organiser_clean,
@@ -274,9 +292,7 @@ def create_event():
     # --- Venues Table Management ---
     venue_clean = venue.strip()
     if venue_clean:
-        existing = db.venues.find_one({
-            'name': {'$regex': f'^{venue_clean}$', '$options': 'i'}
-        })
+        existing = db.venues.find_one(case_insensitive_name_query(venue_clean))
         if not existing:
             db.venues.insert_one({
                 'name': venue_clean,
@@ -532,9 +548,7 @@ def admin_edit(event_id):
             artist_clean = artist.strip()
             if not artist_clean:
                 continue
-            existing = db.Artists.find_one({
-                'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
-            })
+            existing = db.Artists.find_one(case_insensitive_name_query(artist_clean))
             if not existing:
                 db.Artists.insert_one({
                     'name': artist_clean,
@@ -600,6 +614,11 @@ def admin_logout():
     session['admin'] = False
     return redirect(url_for('index'))
 
+@app.route('/edit-submitted')
+def edit_submitted():
+    """Acknowledge a public edit submission."""
+    return render_template('edit_submitted.html')
+
 @app.route('/robots.txt')
 def robots():
     """Serve the robots.txt file."""
@@ -617,23 +636,26 @@ def artist_detail(artist_id):
 @app.route('/artist/<artist_id>/edit', methods=['GET', 'POST'])
 def edit_artist(artist_id):
     """Edit an artist record."""
-    if not session.get('admin'):
-        abort(403)
     db = get_db_connection()
     artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
     if not artist:
         abort(404)
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_from_form()
         update_fields = {'description': description}
         if links:
             update_fields['links'] = links
         else:
             update_fields['links'] = []
-        db.Artists.update_one({'_id': ObjectId(artist_id)}, {'$set': update_fields})
-        return redirect(url_for('artist_detail', artist_id=artist_id))
+        enqueue_pending_edit(
+            db,
+            'Artists',
+            update_fields,
+            target_id=artist_id,
+            lookup_name=artist.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in artist:
         artist['links'] = []
@@ -658,12 +680,17 @@ def edit_organiser(organiser_id):
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_from_form()
         update_fields = {'description': description, 'contact': contact}
         update_fields['links'] = links if links else []
-        db.Organisers.update_one({'_id': ObjectId(organiser_id)}, {'$set': update_fields})
-        return redirect(url_for('organiser_detail', organiser_id=organiser_id))
+        enqueue_pending_edit(
+            db,
+            'Organisers',
+            update_fields,
+            target_id=organiser_id,
+            lookup_name=organiser.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in organiser:
         organiser['links'] = []
@@ -692,16 +719,21 @@ def edit_venue(venue_id):
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_from_form()
         update_fields = {
             'description': description,
             'location': location,
             'contact': contact,
             'links': links if links else []
         }
-        db.venues.update_one({'_id': ObjectId(venue_id)}, {'$set': update_fields})
-        return redirect(url_for('venue_detail', venue_id=venue_id))
+        enqueue_pending_edit(
+            db,
+            'venues',
+            update_fields,
+            target_id=venue_id,
+            lookup_name=venue.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in venue:
         venue['links'] = []
