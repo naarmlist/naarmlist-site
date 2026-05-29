@@ -1,4 +1,15 @@
-from flask import Flask, request, render_template, redirect, url_for, abort, Response, session, send_from_directory, send_file
+from flask import (
+    Flask,
+    Response,
+    abort,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    session,
+    url_for,
+)
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 import os
@@ -10,14 +21,24 @@ import pytz
 import re
 
 app = Flask(__name__)
-# Generate a fresh secret key on every startup, admin sessions are invalidated on restart consequently
+# Generate a fresh secret key on every startup, invalidating admin sessions.
 app.secret_key = secrets.token_hex(32)
 
 REVIEWABLE_COLLECTIONS = {
-    'Artists': {'name_field': 'name'},
-    'venues': {'name_field': 'name'},
-    'Organisers': {'name_field': 'name'}
+    'Artists': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'tags', 'links'}
+    },
+    'venues': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'location', 'contact', 'links', 'link'}
+    },
+    'Organisers': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'contact', 'links'}
+    }
 }
+
 
 def get_db_connection():
     """Return the active MongoDB database connection."""
@@ -27,6 +48,7 @@ def get_db_connection():
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
+
 
 def enqueue_pending_edit(db, collection_name, payload, target_id=None, lookup_name=None):
     """Store a pending write request for admin review."""
@@ -38,6 +60,7 @@ def enqueue_pending_edit(db, collection_name, payload, target_id=None, lookup_na
         'submitted_at': datetime.utcnow().isoformat(),
     }
     db.tmp.insert_one(pending_doc)
+
 
 def parse_links_input(form):
     """Parse link inputs from either repeated fields or newline-separated textarea."""
@@ -52,9 +75,25 @@ def parse_links_input(form):
                 links.append(cleaned)
     return links
 
+
 def case_insensitive_name_query(name):
     """Build an exact case-insensitive name query with escaped user input."""
     return {'name': {'$regex': f'^{re.escape(name)}$', '$options': 'i'}}
+
+
+def is_safe_review_payload(collection_name, payload):
+    """Return whether a pending edit payload is safe to apply."""
+    collection_config = REVIEWABLE_COLLECTIONS.get(collection_name)
+    if not collection_config or not isinstance(payload, dict) or not payload:
+        return False
+    allowed_fields = collection_config['allowed_fields']
+    for field_name in payload:
+        if field_name not in allowed_fields:
+            return False
+        if field_name.startswith('$') or '.' in field_name:
+            return False
+    return True
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -105,7 +144,8 @@ def index():
             key = artist.strip().lower()
             artist_doc = artist_lookup.get(key)
             if artist_doc and artist_doc.get('description', '').strip():
-                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+                event['artist_links'].append(
+                    {'name': artist.strip(), 'id': str(artist_doc['_id'])})
             else:
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
@@ -123,8 +163,9 @@ def index():
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            # Try a fallback: search in MongoDB with collation for case-insensitive and space-insensitive match
-            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+            # Fall back to MongoDB collation for case-insensitive matching.
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={
+                                           'locale': 'en', 'strength': 1})
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -136,14 +177,25 @@ def index():
         organiser_key = normalize_name(event.get('organisers', ''))
         organiser_doc = organiser_lookup.get(organiser_key)
         if not organiser_doc:
-            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+            organiser_doc = db.Organisers.find_one(
+                {'name': event.get('organisers', '')},
+                collation={'locale': 'en', 'strength': 1},
+            )
         if organiser_doc and organiser_doc.get('description', '').strip():
-            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+            event['organiser_link'] = {
+                'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
             event['organiser_link'] = {'name': event['organisers'], 'id': None}
     # --- END ORGANISER LINK LOGIC ---
 
-    return render_template('index.html', events=events, search_query=search_query, show_past=False, artists=artist_docs)
+    return render_template(
+        'index.html',
+        events=events,
+        search_query=search_query,
+        show_past=False,
+        artists=artist_docs,
+    )
+
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
@@ -152,6 +204,7 @@ def clear_event_search():
     if show_past:
         return redirect(url_for('past_events'))
     return redirect(url_for('index'))
+
 
 @app.route('/past', methods=['GET', 'POST'])
 def past_events():
@@ -196,7 +249,8 @@ def past_events():
             key = artist.strip().lower()
             artist_doc = artist_lookup.get(key)
             if artist_doc and artist_doc.get('description', '').strip():
-                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+                event['artist_links'].append(
+                    {'name': artist.strip(), 'id': str(artist_doc['_id'])})
             else:
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
@@ -211,7 +265,8 @@ def past_events():
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={'locale': 'en', 'strength': 1})
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={
+                                           'locale': 'en', 'strength': 1})
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -225,21 +280,30 @@ def past_events():
         organiser_key = normalize_name(event.get('organisers', ''))
         organiser_doc = organiser_lookup.get(organiser_key)
         if not organiser_doc:
-            organiser_doc = db.Organisers.find_one({'name': event.get('organisers', '')}, collation={'locale': 'en', 'strength': 1})
+            organiser_doc = db.Organisers.find_one(
+                {'name': event.get('organisers', '')},
+                collation={'locale': 'en', 'strength': 1},
+            )
         if organiser_doc and organiser_doc.get('description', '').strip():
-            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+            event['organiser_link'] = {
+                'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
             event['organiser_link'] = {'name': event['organisers'], 'id': None}
     # --- END ORGANISER LINK LOGIC ---
 
     return render_template('index.html', events=events, search_query=search_query, show_past=True)
 
+
 @app.route('/createEvent', methods=['POST'])
 def create_event():
     """Create a new event from form data."""
 
-    ## Validate the input data
-    if not request.form['title'] or not request.form['start_datetime'] or not request.form['end_datetime']:
+    # Validate the input data
+    if (
+        not request.form['title']
+        or not request.form['start_datetime']
+        or not request.form['end_datetime']
+    ):
         return "Missing required fields", 400
     # check end datetime is after start datetime
     try:
@@ -317,6 +381,7 @@ def create_event():
 
     return redirect(url_for('index'))
 
+
 @app.route('/createVenue', methods=['POST'])
 def create_venue():
     """Create a new venue from form data."""
@@ -336,10 +401,12 @@ def create_venue():
     }, lookup_name=name)
     return redirect(url_for('venues'))
 
+
 @app.route('/addEvent', methods=['GET'])
 def add_event():
     """Render the add-event form."""
     return render_template('add_event.html')
+
 
 @app.route('/venues', methods=['GET'])
 def venues():
@@ -348,6 +415,7 @@ def venues():
     venues = db.venues.find()
     return render_template('venues.html', venues=venues)
 
+
 @app.route('/organisers', methods=['GET'])
 def organisers():
     """Render the organisers index page."""
@@ -355,6 +423,7 @@ def organisers():
     organisers = list(db.Organisers.find())
     organisers.sort(key=lambda x: x['name'].lower())
     return render_template('organisers.html', organisers=organisers)
+
 
 @app.route('/artists', methods=['GET'])
 def artists():
@@ -366,6 +435,8 @@ def artists():
     return render_template('artists.html', artists=artists)
 
 # New route to show calendar options.
+
+
 @app.route('/calendar/<event_id>')
 def calendar_event(event_id):
     """Render calendar links for an event."""
@@ -380,8 +451,11 @@ def calendar_event(event_id):
     # Format for Google Calendar (removing the Z suffix to prevent UTC interpretation)
     start_str = start_dt.strftime("%Y%m%dT%H%M%S")
     end_str = end_dt.strftime("%Y%m%dT%H%M%S")
-    gcal_url = ("https://calendar.google.com/calendar/r/eventedit?text=" +
-                f"{event['title']}&dates={start_str}/{end_str}&details={event['link']}&location={event['venue']}")
+    gcal_url = (
+        "https://calendar.google.com/calendar/r/eventedit?text="
+        f"{event['title']}&dates={start_str}/{end_str}"
+        f"&details={event['link']}&location={event['venue']}"
+    )
     # Render minimal HTML with options.
     return f"""
     <!DOCTYPE html>
@@ -396,13 +470,17 @@ def calendar_event(event_id):
         <a href="{gcal_url}" target="_blank">Add to Google Calendar</a>
       </p>
       <p>
-        <a href="{url_for('ics_file', event_id=event_id)}" target="_blank">Download ICS to use in iCalendar</a>
+        <a href="{url_for('ics_file', event_id=event_id)}" target="_blank">
+          Download ICS to use in iCalendar
+        </a>
       </p>
     </body>
     </html>
     """
 
 # New route to generate ICS file.
+
+
 @app.route('/ics/<event_id>')
 def ics_file(event_id):
     """Generate an ICS download for an event."""
@@ -427,7 +505,12 @@ LOCATION:{event['venue']}
 END:VEVENT
 END:VCALENDAR
 """
-    return Response(ics_content, mimetype="text/calendar", headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"})
+    return Response(
+        ics_content,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"},
+    )
+
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
@@ -475,8 +558,10 @@ def notes():
 
                     # Apply search filter only if there's a query from POST
                     if search_query:
-                        title_match = metadata.get('title', '').lower().find(search_query.lower()) != -1
-                        tags_match = any(search_query.lower() in tag.lower() for tag in metadata.get('tags', []))
+                        title_match = metadata.get('title', '').lower().find(
+                            search_query.lower()) != -1
+                        tags_match = any(search_query.lower() in tag.lower()
+                                         for tag in metadata.get('tags', []))
                         content_match = content.lower().find(search_query.lower()) != -1
                         if not (title_match or tags_match or content_match):
                             continue
@@ -492,14 +577,16 @@ def notes():
     notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
     has_results = len(notes) > 0
     return render_template('notes.html',
-                         notes=notes,
-                         search_query=search_query,
-                         has_results=has_results)
+                           notes=notes,
+                           search_query=search_query,
+                           has_results=has_results)
+
 
 @app.route('/clearNoteSearch', methods=['POST'])
 def clear_note_search():
     """Clear the notes search query."""
     return redirect(url_for('notes'))
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
@@ -515,6 +602,7 @@ def admin_login():
             return render_template('admin_login.html', error=error)
     return render_template('admin_login.html')
 
+
 @app.route('/admin/events')
 def admin_events():
     """Render the admin events page."""
@@ -527,6 +615,7 @@ def admin_events():
         event['end_datetime'] = datetime.fromisoformat(event['end_datetime'])
     events.sort(key=lambda x: x['start_datetime'])
     return render_template('admin_dashboard.html', events=events)
+
 
 @app.route('/admin/review_edits')
 def admin_review_edits():
@@ -541,6 +630,7 @@ def admin_review_edits():
         payload = edit.get('payload', {})
         edit['object_name'] = payload.get('name') or edit.get('lookup_name') or 'Unnamed'
     return render_template('admin_review_edits.html', pending_edits=pending_edits)
+
 
 @app.route('/admin/review_edits/<edit_id>/approve', methods=['POST'])
 def approve_review_edit(edit_id):
@@ -557,13 +647,15 @@ def approve_review_edit(edit_id):
     target_id = pending_edit.get('target_id')
     lookup_name = pending_edit.get('lookup_name', '')
 
-    if collection_name not in REVIEWABLE_COLLECTIONS:
+    if not is_safe_review_payload(collection_name, payload):
         abort(400)
 
     destination_collection = db[collection_name]
 
     if target_id:
-        destination_collection.update_one({'_id': target_id}, {'$set': payload}, upsert=True)
+        update_result = destination_collection.update_one({'_id': target_id}, {'$set': payload})
+        if update_result.matched_count == 0:
+            abort(404)
     else:
         existing = None
         if lookup_name:
@@ -581,6 +673,7 @@ def approve_review_edit(edit_id):
     db.tmp.delete_one({'_id': ObjectId(edit_id)})
     return redirect(url_for('admin_review_edits'))
 
+
 @app.route('/admin/review_edits/<edit_id>/reject', methods=['POST'])
 def reject_review_edit(edit_id):
     """Reject a queued write and remove it from the review queue."""
@@ -590,6 +683,7 @@ def reject_review_edit(edit_id):
     db.tmp.delete_one({'_id': ObjectId(edit_id)})
     return redirect(url_for('admin_review_edits'))
 
+
 @app.route('/admin/delete/<event_id>', methods=['POST'])
 def admin_delete(event_id):
     """Delete an event from the admin dashboard."""
@@ -598,6 +692,7 @@ def admin_delete(event_id):
     db = get_db_connection()
     db.events.delete_one({'_id': ObjectId(event_id)})
     return redirect(url_for('admin_events'))
+
 
 @app.route('/admin/edit/<event_id>', methods=['GET', 'POST'])
 def admin_edit(event_id):
@@ -614,7 +709,11 @@ def admin_edit(event_id):
             'start_datetime': request.form['start_datetime'],
             'end_datetime': request.form['end_datetime'],
             'tags': [tag.strip() for tag in request.form['tags'].split(',') if tag.strip()],
-            'artists': [artist.strip() for artist in request.form['artists'].split(',') if artist.strip()]
+            'artists': [
+                artist.strip()
+                for artist in request.form['artists'].split(',')
+                if artist.strip()
+            ]
         }
         db.events.update_one({'_id': ObjectId(event_id)}, {'$set': updated_fields}, upsert=True)
         # --- Artists Table Management for update ---
@@ -637,6 +736,7 @@ def admin_edit(event_id):
         if not event:
             abort(404)
         return render_template('admin_edit.html', event=event)
+
 
 def export_database():
     """Export database collections to a JSON backup file."""
@@ -667,6 +767,7 @@ def export_database():
 
     return filename
 
+
 @app.route('/admin/export_db')
 def admin_export_db():
     """Download a JSON backup of the database."""
@@ -683,21 +784,25 @@ def admin_export_db():
     except Exception as e:
         return f"Export failed: {str(e)}", 500
 
+
 @app.route('/admin/logout')
 def admin_logout():
     """Log out the current admin session."""
     session['admin'] = False
     return redirect(url_for('index'))
 
+
 @app.route('/edit-submitted')
 def edit_submitted():
     """Acknowledge a public edit submission."""
     return render_template('edit_submitted.html')
 
+
 @app.route('/robots.txt')
 def robots():
     """Serve the robots.txt file."""
     return send_from_directory(os.path.dirname(__file__), 'robots.txt')
+
 
 @app.route('/artist/<artist_id>')
 def artist_detail(artist_id):
@@ -707,6 +812,7 @@ def artist_detail(artist_id):
     if not artist:
         abort(404)
     return render_template('artist_detail.html', artist=artist)
+
 
 @app.route('/artist/<artist_id>/edit', methods=['GET', 'POST'])
 def edit_artist(artist_id):
@@ -733,6 +839,7 @@ def edit_artist(artist_id):
         artist['links'] = []
     return render_template('edit_artist.html', artist=artist)
 
+
 @app.route('/organiser/<organiser_id>')
 def organiser_detail(organiser_id):
     """Render the detail page for an organiser."""
@@ -741,6 +848,7 @@ def organiser_detail(organiser_id):
     if not organiser:
         abort(404)
     return render_template('organiser_detail.html', organiser=organiser)
+
 
 @app.route('/organiser/<organiser_id>/edit', methods=['GET', 'POST'])
 def edit_organiser(organiser_id):
@@ -768,6 +876,7 @@ def edit_organiser(organiser_id):
         organiser['links'] = []
     return render_template('edit_organiser.html', organiser=organiser)
 
+
 @app.route('/venue/<venue_id>')
 def venue_detail(venue_id):
     """Render the detail page for a venue."""
@@ -779,6 +888,7 @@ def venue_detail(venue_id):
     if 'links' not in venue:
         venue['links'] = []
     return render_template('venue_detail.html', venue=venue)
+
 
 @app.route('/venue/<venue_id>/edit', methods=['GET', 'POST'])
 def edit_venue(venue_id):
@@ -810,6 +920,7 @@ def edit_venue(venue_id):
     if 'links' not in venue:
         venue['links'] = []
     return render_template('edit_venue.html', venue=venue)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
