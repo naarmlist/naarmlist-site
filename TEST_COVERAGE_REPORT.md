@@ -1,13 +1,13 @@
 # Test Coverage Report
 
-Generated: 2026-05-29
+Generated: 2026-06-16
 
 Command run:
 
 ```powershell
-python -m coverage run --source=app -m pytest app
+python -m coverage run --source=app -m pytest tests
 python -m coverage report -m
-python -m coverage report -m --include="app/app.py"
+python -m coverage report -m --format=markdown
 ```
 
 ## Result
@@ -26,19 +26,14 @@ app\app.py     499     28    94%   48-50, 94, 219-220, 252, 271, 288, 307, 342, 
 TOTAL          499     28    94%
 ```
 
-## Full Coverage Run
+## Workflow Coverage Run
 
 ```text
-Name                          Stmts   Miss  Cover   Missing
------------------------------------------------------------
-app\app.py                      499     28    94%   48-50, 94, 219-220, 252, 271, 288, 307, 342, 357, 548-551, 557, 603, 723, 759, 784-785, 875-877, 920-922, 926
-app\conftest.py                  34      1    97%   40
-app\test_admin_routes.py         45      0   100%
-app\test_artists.py             293      0   100%
-app\test_database_safety.py      61      0   100%
-app\test_public_routes.py        57      0   100%
------------------------------------------------------------
-TOTAL                           989     29    97%
+Name         Stmts   Miss  Cover   Missing
+------------------------------------------
+app\app.py     499     28    94%   48-50, 94, 219-220, 252, 271, 288, 307, 342, 357, 548-551, 557, 603, 723, 759, 784-785, 875-877, 920-922, 926
+------------------------------------------
+TOTAL          499     28    94%
 ```
 
 ## Coverage Added
@@ -52,7 +47,7 @@ TOTAL                           989     29    97%
 
 ## Test Database Model
 
-The test suite uses `mongomock` through the shared `client` fixture in `app/conftest.py`.
+The test suite uses `mongomock` through the shared `client` fixture in `tests/conftest.py`.
 For each test, the fixture creates a fresh in-memory MongoDB client and assigns its database
 to `app.db_override`. The application code already checks `app.db_override` in
 `get_db_connection()`, so routes run normally but use the isolated in-memory database instead

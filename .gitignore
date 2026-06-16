@@ -2,6 +2,11 @@
 app/.DS_Store
 app/static/.DS_Store
 .pytest_cache
+.coverage
+coverage.xml
+coverage-report.md
+htmlcov/
+.pylint.d/
 __pycache__
 STRAT.md
 .DS_Store

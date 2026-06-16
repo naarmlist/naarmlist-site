@@ -2,13 +2,31 @@
 
 A listing service of gigs and events in Melbourne (Naarm)
 
+### Quick Local Site
+
+To start a local test site with MongoDB using the default development settings:
+
+```powershell
+.\scripts\start-local-site.ps1
+```
+
+On macOS/Linux:
+
+```bash
+sh scripts/start-local-site.sh
+```
+
+The script creates `.env` from `.env.example` if needed, then runs `docker compose up --build`.
+Visit `http://localhost:8000` once the containers are ready.
+
 ### Instructions
 
 This setup uses `docker-compose` to spin up the mongo backend and web frontend
 
 1. **Build and run the services:**
 
-    Before running you will need a `.env` file set up.
+    Before running you will need a `.env` file set up. You can copy `.env.example` or use
+    one of the scripts above.
 
     ```bash
     $ cat .env

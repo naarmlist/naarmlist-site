@@ -5,8 +5,16 @@ That lets route tests seed dummy data freely without touching a real MongoDB
 instance or leaking state between tests.
 """
 
+from pathlib import Path
+import sys
+
 import mongomock
 import pytest
+
+
+APP_DIR = Path(__file__).resolve().parents[1] / 'app'
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
 
 
 @pytest.fixture
