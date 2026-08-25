@@ -12,3 +12,5 @@ STRAT.md
 .DS_Store
 app/exports/
 plan.md
+venv/
+.venv/

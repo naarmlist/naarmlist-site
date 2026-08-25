@@ -1,6 +1,42 @@
 # Naarm List
 
-A listing service of gigs and events in Melbourne (Naarm)
+A listing service of gigs and events in Melbourne (Naarm).
+
+### Python Development Setup
+
+For local Python development, linting, and testing:
+
+1. Create a virtual environment:
+
+    ```bash
+    python3 -m venv .venv
+    ```
+
+2. Activate the virtual environment:
+
+    ```bash
+    source .venv/bin/activate
+    ```
+
+3. Install development dependencies:
+
+    ```bash
+    pip install -r app/requirements.txt
+    ```
+
+4. Run tests and lint checks:
+
+    ```bash
+    pytest -v tests
+    pylint app tests scripts
+    python -m pycodestyle app tests scripts --max-line-length=99
+    ```
+
+5. Deactivate when done:
+
+    ```bash
+    deactivate
+    ```
 
 ### Quick Local Site
 
@@ -19,18 +55,14 @@ sh scripts/start-local-site.sh
 The script creates `.env` from `.env.example` if needed, then runs `docker compose up --build`.
 Visit `http://localhost:8000` once the containers are ready.
 
-### Instructions
+### Docker Compose
 
-This setup uses `docker-compose` to spin up the mongo backend and web frontend
+This setup uses `docker-compose` to spin up the MongoDB backend and web frontend.
 
-1. **Build and run the services:**
-
-    Before running you will need a `.env` file set up. You can copy `.env.example` or use
-    one of the scripts above.
+1. Before running, create a `.env` file. You can copy `.env.example` or use one of the
+   scripts above.
 
     ```bash
-    $ cat .env
-
     DB_NAME="gigsdb"
     DB_URL="mongodb://db:27017/"
 
@@ -42,23 +74,30 @@ This setup uses `docker-compose` to spin up the mongo backend and web frontend
     ADMIN_USER="user"
     ```
 
-2. Now you can bring it up using docker
+2. Bring it up with Docker:
 
     ```bash
     docker-compose up --build
     ```
 
-3. **Access the app** by visiting `http://localhost:8000`.
+3. Access the app at `http://localhost:8000`.
 
-4. **(OPTIONAL)** Database Seeding
+4. Optional database seeding:
 
     A script `seed_db.sh` is provided to seed the MongoDB database from a JSON backup file.
 
-    You can attempt to run the it with all env vars sourced from your `env` using `docker-compose --profile seed up seed_db`
+    You can run it with env vars sourced from your `.env` using:
 
-    This script can also be used to restore the database from the latest exported backup file in the `db_data/` directory.
+    ```bash
+    docker-compose --profile seed up seed_db
+    ```
 
-    Backup files are created in the admin dashboard. Scroll to the bottom and select 'Export Database' or accessing the link directly e.g. `http://localhost:8000/admin/export_db` will automatically start an export and download.
+    This script can also restore the database from the latest exported backup file in
+    the `db_data/` directory.
+
+    Backup files are created in the admin dashboard. Scroll to the bottom and select
+    "Export Database", or open `http://localhost:8000/admin/export_db` directly after
+    logging in.
 
 ### Database Dumps
 
@@ -99,5 +138,6 @@ copy or run the standalone Compose exporter from the directory containing `docke
 bash scripts/manual-export-from-compose.sh
 ```
 
-It exports from the running MongoDB Compose service into `db_data/naarm_list_backup_YYYYmmdd_HHMMSS.json`.
-It does not need the newer Python import/export helpers to exist on that server.
+It exports from the running MongoDB Compose service into
+`db_data/naarm_list_backup_YYYYmmdd_HHMMSS.json`. It does not need the newer Python
+import/export helpers to exist on that server.
