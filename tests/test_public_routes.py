@@ -4,16 +4,16 @@
 def test_directory_indexes_sort_entries_case_insensitively(client, db):
     """Sort directory index entries case-insensitively."""
     db.Artists.insert_many([
-        {'name': 'bravo', 'description': '', 'tags': ''},
-        {'name': 'Alpha', 'description': '', 'tags': ''},
+        {'name': 'bravo', 'description': 'bio', 'tags': ''},
+        {'name': 'Alpha', 'description': 'bio', 'tags': ''},
     ])
     db.venues.insert_many([
-        {'name': 'zeta', 'description': '', 'location': '', 'contact': '', 'links': []},
-        {'name': 'Beta', 'description': '', 'location': '', 'contact': '', 'links': []},
+        {'name': 'zeta', 'description': 'desc', 'location': '', 'contact': '', 'links': []},
+        {'name': 'Beta', 'description': 'desc', 'location': '', 'contact': '', 'links': []},
     ])
     db.Organisers.insert_many([
-        {'name': 'delta', 'description': '', 'contact': '', 'links': []},
-        {'name': 'Charlie', 'description': '', 'contact': '', 'links': []},
+        {'name': 'delta', 'description': 'desc', 'contact': '', 'links': []},
+        {'name': 'Charlie', 'description': 'desc', 'contact': '', 'links': []},
     ])
 
     artists = client.get('/artists').data.decode()
@@ -23,6 +23,118 @@ def test_directory_indexes_sort_entries_case_insensitively(client, db):
     assert artists.index('Alpha') < artists.index('bravo')
     assert venues.index('Beta') < venues.index('zeta')
     assert organisers.index('Charlie') < organisers.index('delta')
+
+
+def test_organiser_directory_hides_blank_entries_and_empty_letters(client, db):
+    """Hide blank organiser records by default and omit empty letters."""
+    db.Organisers.insert_many([
+        {'name': 'Alpha Org', 'description': '', 'contact': '', 'links': []},
+        {'name': 'Bravo Org', 'description': 'desc', 'contact': '', 'links': []},
+    ])
+
+    response = client.get('/organisers')
+    html = response.data.decode()
+
+    assert response.status_code == 200
+    assert 'Organiser Directory' in html
+    assert 'Show all organisers' in html
+    assert 'name="show_all"' in html
+    assert 'checked' not in html
+    assert '>Alpha Org<' not in html
+    assert 'Bravo Org' in html
+    assert 'href="#letter-A"' not in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' not in html
+
+
+def test_organiser_show_all_includes_blank_entries_with_create_link(client, db):
+    """Show blank organisers with a create-page link when show_all is enabled."""
+    organiser_id = db.Organisers.insert_one({
+        'name': 'Alpha Org',
+        'description': '',
+        'contact': '',
+        'links': []
+    }).inserted_id
+    db.Organisers.insert_one({
+        'name': 'Bravo Org',
+        'description': 'desc',
+        'contact': '',
+        'links': []
+    })
+
+    response = client.get('/organisers?show_all=1')
+    html = response.data.decode()
+
+    assert response.status_code == 200
+    assert 'Show all organisers' in html
+    assert 'checked' in html
+    assert 'Alpha Org' in html
+    assert 'Bravo Org' in html
+    assert 'create this page' in html
+    assert f'/organiser/{organiser_id}/edit' in html
+    assert 'href="#letter-A"' in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' not in html
+
+
+def test_venue_directory_hides_blank_entries_and_empty_letters(client, db):
+    """Hide blank venue records by default and omit empty letters."""
+    db.venues.insert_many([
+        {'name': 'Alpha Venue', 'description': '', 'location': '', 'contact': '', 'links': []},
+        {
+            'name': 'Bravo Venue',
+            'description': 'desc',
+            'location': '',
+            'contact': '',
+            'links': []
+        },
+    ])
+
+    response = client.get('/venues')
+    html = response.data.decode()
+
+    assert response.status_code == 200
+    assert 'Venue Directory' in html
+    assert 'Show all venues' in html
+    assert 'name="show_all"' in html
+    assert 'checked' not in html
+    assert '>Alpha Venue<' not in html
+    assert 'Bravo Venue' in html
+    assert 'href="#letter-A"' not in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' not in html
+
+
+def test_venue_show_all_includes_blank_entries_with_create_link(client, db):
+    """Show blank venues with a create-page link when show_all is enabled."""
+    venue_id = db.venues.insert_one({
+        'name': 'Alpha Venue',
+        'description': '',
+        'location': '',
+        'contact': '',
+        'links': []
+    }).inserted_id
+    db.venues.insert_one({
+        'name': 'Bravo Venue',
+        'description': 'desc',
+        'location': '',
+        'contact': '',
+        'links': []
+    })
+
+    response = client.get('/venues?show_all=1')
+    html = response.data.decode()
+
+    assert response.status_code == 200
+    assert 'Show all venues' in html
+    assert 'checked' in html
+    assert 'Alpha Venue' in html
+    assert 'Bravo Venue' in html
+    assert 'create this page' in html
+    assert f'/venue/{venue_id}/edit' in html
+    assert 'href="#letter-A"' in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' not in html
 
 
 def test_detail_pages_render_missing_optional_links(client, db):

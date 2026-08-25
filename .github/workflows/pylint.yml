@@ -27,7 +27,7 @@ jobs:
 
       - name: Run pylint syntax and error checks
         run: |
-          python -m pylint app tests \
+          python -m pylint app tests scripts \
             --persistent=n \
             --disable=all \
             --enable=syntax-error,undefined-variable,undefined-loop-variable,used-before-assignment

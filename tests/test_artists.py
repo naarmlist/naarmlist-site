@@ -378,19 +378,58 @@ def test_admin_edit_updates_event_and_adds_new_artists_directly(client):
 
 
 def test_artists_page_table(client):
-    """Render the artist directory in sorted order."""
+    """Render only artists with bios in sorted order by default."""
     db = get_db_connection()
     db.Artists.insert_many([
         {'name': 'Alpha', 'description': '', 'tags': ''},
         {'name': 'Bravo', 'description': 'desc', 'tags': 'tag'},
-        {'name': 'Charlie', 'description': '', 'tags': 'tag2'}
+        {'name': 'Charlie', 'description': 'desc', 'tags': 'tag2'}
     ])
     response = client.get('/artists')
     html = response.data.decode()
     assert 'Artist Directory' in html
+    assert 'Show all artists' in html
+    assert 'name="show_all"' in html
+    assert 'checked' not in html
     assert 'edit this page' not in html
-    # Sorted order
-    assert html.index('Alpha') < html.index('Bravo') < html.index('Charlie')
+    assert '>Alpha<' not in html
+    assert html.index('Bravo') < html.index('Charlie')
+    assert 'href="#letter-A"' not in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' in html
+    assert 'href="#letter-D"' not in html
+
+
+def test_artists_show_all_includes_blank_bio_artists_with_create_link(client):
+    """Show blank-bio artists with a create-bio link when show_all is enabled."""
+    db = get_db_connection()
+    blank_artist_id = db.Artists.insert_one({
+        'name': 'Alpha',
+        'description': '',
+        'tags': '',
+        'links': []
+    }).inserted_id
+    db.Artists.insert_one({
+        'name': 'Bravo',
+        'description': 'desc',
+        'tags': '',
+        'links': []
+    })
+
+    response = client.get('/artists?show_all=1')
+    html = response.data.decode()
+
+    assert response.status_code == 200
+    assert 'Show all artists' in html
+    assert 'name="show_all"' in html
+    assert 'checked' in html
+    assert 'Alpha' in html
+    assert 'Bravo' in html
+    assert 'create this bio' in html
+    assert f'/artist/{blank_artist_id}/edit' in html
+    assert 'href="#letter-A"' in html
+    assert 'href="#letter-B"' in html
+    assert 'href="#letter-C"' not in html
 
 
 def test_artist_edit_is_queued_for_review(client):

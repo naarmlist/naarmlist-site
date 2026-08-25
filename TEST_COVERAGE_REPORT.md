@@ -1,11 +1,11 @@
 # Test Coverage Report
 
-Generated: 2026-06-16
+Generated: 2026-08-23
 
 Command run:
 
 ```powershell
-python -m coverage run --source=app -m pytest tests
+python -m coverage run --source=app,scripts -m pytest tests
 python -m coverage report -m
 python -m coverage report -m --format=markdown
 ```
@@ -13,7 +13,7 @@ python -m coverage report -m --format=markdown
 ## Result
 
 ```text
-47 passed
+58 passed
 ```
 
 ## Application Coverage
@@ -29,11 +29,13 @@ TOTAL          499     28    94%
 ## Workflow Coverage Run
 
 ```text
-Name         Stmts   Miss  Cover   Missing
-------------------------------------------
-app\app.py     499     28    94%   48-50, 94, 219-220, 252, 271, 288, 307, 342, 357, 548-551, 557, 603, 723, 759, 784-785, 875-877, 920-922, 926
-------------------------------------------
-TOTAL          499     28    94%
+Name                   Stmts   Miss  Cover   Missing
+----------------------------------------------------
+app\app.py               499     28    94%   48-50, 94, 219-220, 252, 271, 288, 307, 342, 357, 548-551, 557, 603, 723, 759, 784-785, 875-877, 920-922, 926
+scripts\db_export.py      65     18    72%   30, 51-52, 60, 65-89, 114-121, 125
+scripts\db_import.py      92     26    72%   28-36, 61, 66-90, 146, 154-163, 167
+----------------------------------------------------
+TOTAL                    656     72    89%
 ```
 
 ## Coverage Added
@@ -44,6 +46,7 @@ TOTAL          499     28    94%
 - Database safety: unknown collections, unapproved fields, dotted keys, operator-like keys, empty payloads, and orphan target edits.
 - Existing event and directory behavior: validation, trimming, duplicate prevention, links, calendar, ICS, and access controls.
 - Seeded dummy data safety: read-only routes are exercised against populated collections and checked for unintended mutation.
+- Database dump scripts: export/import collection mapping, ObjectId restoration, malformed dump rejection, compact JSON output, dotenv loading, and idempotent non-drop imports.
 
 ## Test Database Model
 

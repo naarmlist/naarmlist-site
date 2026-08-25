@@ -59,3 +59,45 @@ This setup uses `docker-compose` to spin up the mongo backend and web frontend
     This script can also be used to restore the database from the latest exported backup file in the `db_data/` directory.
 
     Backup files are created in the admin dashboard. Scroll to the bottom and select 'Export Database' or accessing the link directly e.g. `http://localhost:8000/admin/export_db` will automatically start an export and download.
+
+### Database Dumps
+
+Use the Python scripts for portable JSON dump export/import. They read `.env` by default and
+fall back to `mongodb://localhost:27017/` and `gigsdb`. If `.env` contains Docker Compose's
+`mongodb://db:27017/` host, the scripts map that to `localhost` when run from your terminal.
+
+Export a dump:
+
+```powershell
+python scripts\db_export.py
+```
+
+Export to a specific file:
+
+```powershell
+python scripts\db_export.py --output db_data\manual_backup.json
+```
+
+Import or update records from a dump without dropping existing collections:
+
+```powershell
+python scripts\db_import.py db_data\manual_backup.json
+```
+
+Restore a dump by dropping imported collections first:
+
+```powershell
+python scripts\db_import.py db_data\manual_backup.json --drop --yes
+```
+
+Both scripts accept `--uri` and `--db` if you need to point at a different MongoDB instance.
+
+If you are on an old server running the `main` branch and only have Docker Compose available,
+copy or run the standalone Compose exporter from the directory containing `docker-compose.yml`:
+
+```bash
+bash scripts/manual-export-from-compose.sh
+```
+
+It exports from the running MongoDB Compose service into `db_data/naarm_list_backup_YYYYmmdd_HHMMSS.json`.
+It does not need the newer Python import/export helpers to exist on that server.

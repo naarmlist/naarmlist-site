@@ -95,6 +95,31 @@ def is_safe_review_payload(collection_name, payload):
     return True
 
 
+def get_directory_context(collection):
+    """Return visible directory entries grouped by starting letter."""
+    show_all = request.args.get('show_all') == '1'
+    entries = list(collection.find())
+    if not show_all:
+        entries = [
+            entry for entry in entries
+            if entry.get('description', '').strip()
+        ]
+    entries.sort(key=lambda x: x['name'].lower())
+
+    grouped_entries = {}
+    for entry in entries:
+        name = entry.get('name', '')
+        if not name:
+            continue
+        grouped_entries.setdefault(name[0].upper(), []).append(entry)
+
+    visible_letters = [
+        letter for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        if grouped_entries.get(letter)
+    ]
+    return entries, grouped_entries, visible_letters, show_all
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Render the upcoming events listing."""
@@ -412,27 +437,44 @@ def add_event():
 def venues():
     """Render the venues index page."""
     db = get_db_connection()
-    venues = db.venues.find()
-    return render_template('venues.html', venues=venues)
+    venues, grouped_venues, visible_letters, show_all = get_directory_context(db.venues)
+    return render_template(
+        'venues.html',
+        venues=venues,
+        grouped_venues=grouped_venues,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
 
 
 @app.route('/organisers', methods=['GET'])
 def organisers():
     """Render the organisers index page."""
     db = get_db_connection()
-    organisers = list(db.Organisers.find())
-    organisers.sort(key=lambda x: x['name'].lower())
-    return render_template('organisers.html', organisers=organisers)
+    organisers, grouped_organisers, visible_letters, show_all = get_directory_context(
+        db.Organisers
+    )
+    return render_template(
+        'organisers.html',
+        organisers=organisers,
+        grouped_organisers=grouped_organisers,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
 
 
 @app.route('/artists', methods=['GET'])
 def artists():
     """Render the artists index page."""
     db = get_db_connection()
-    # Fetch all artists, sort alphabetically (case-insensitive)
-    artists = list(db.Artists.find())
-    artists.sort(key=lambda x: x['name'].lower())
-    return render_template('artists.html', artists=artists)
+    artists, grouped_artists, visible_letters, show_all = get_directory_context(db.Artists)
+    return render_template(
+        'artists.html',
+        artists=artists,
+        grouped_artists=grouped_artists,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
 
 # New route to show calendar options.
 

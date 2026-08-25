@@ -30,11 +30,11 @@ jobs:
           python -m pip install -r app/requirements.txt
 
       - name: Check PEP 8 style
-        run: python -m pycodestyle app tests --max-line-length=99
+        run: python -m pycodestyle app tests scripts --max-line-length=99
 
       - name: Run tests with coverage
         run: |
-          python -m coverage run --source=app -m pytest tests
+          python -m coverage run --source=app,scripts -m pytest tests
           python -m coverage report -m
           python -m coverage report -m --format=markdown > coverage-report.md
           python -m coverage xml -o coverage.xml
