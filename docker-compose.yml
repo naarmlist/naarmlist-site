@@ -21,11 +21,12 @@ services:
     ports:
       - "27017:27017"
   seed_db:
-    image: mongo:latest
+    build: .
     depends_on:
       - db
     volumes:
       - ./db_data:/db_data
+      - ./scripts:/scripts
       - ./seed_db.sh:/seed_db.sh
     entrypoint: ["/bin/bash", "/seed_db.sh", "-y"]
     environment:
