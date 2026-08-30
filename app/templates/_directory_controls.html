@@ -1,0 +1,44 @@
+{% macro alphabet_nav(visible_letters) %}
+  <div class="alphabet-nav mb-3">
+    {% for letter in visible_letters %}
+      <a href="#letter-{{ letter }}" class="alphabet-link">{{ letter }}</a>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro show_all_toggle(label, show_all) %}
+  <form method="GET" class="text-center mb-3">
+    <label>
+      <input type="checkbox" name="show_all" value="1" onchange="this.form.submit()" {% if show_all %}checked{% endif %}>
+      {{ label }}
+    </label>
+  </form>
+{% endmacro %}
+
+{% macro alphabet_nav_styles() %}
+  <style>
+    .alphabet-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .alphabet-link {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .alphabet-link:hover {
+      background: #e6f0ff;
+      color: #0056b3;
+      text-decoration: underline;
+    }
+  </style>
+{% endmacro %}

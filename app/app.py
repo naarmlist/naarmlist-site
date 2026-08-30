@@ -1,29 +1,128 @@
-"""Flask web application for managing and displaying events in Naarm (Melbourne)."""
-import os
-import json
-from datetime import datetime, timedelta
-
-from flask import (Flask, request, render_template, redirect, url_for,
-                   abort, Response, session, send_from_directory, send_file)
+from flask import (
+    Flask,
+    Response,
+    abort,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    session,
+    url_for,
+)
 from pymongo import MongoClient
-from bson.objectid import ObjectId
+from datetime import datetime, timedelta
+import os
+import secrets
+from bson.objectid import ObjectId  # Added for ObjectId conversion
 import markdown
+import json
 import pytz
+import re
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # New: secret key for admin sessions
+# Generate a fresh secret key on every startup, invalidating admin sessions.
+app.secret_key = secrets.token_hex(32)
+
+REVIEWABLE_COLLECTIONS = {
+    'Artists': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'tags', 'links'}
+    },
+    'venues': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'location', 'contact', 'links', 'link'}
+    },
+    'Organisers': {
+        'name_field': 'name',
+        'allowed_fields': {'name', 'description', 'contact', 'links'}
+    }
+}
+
 
 def get_db_connection():
-    """Get database connection, with optional override for testing."""
+    """Return the active MongoDB database connection."""
     # Allow override for testing
-    if hasattr(app, 'db_override') and app.db_override is not None:  # pylint: disable=no-member
-        return app.db_override  # pylint: disable=no-member
+    if hasattr(app, 'db_override') and app.db_override is not None:
+        return app.db_override
     client = MongoClient(os.getenv("DB_URL"))
     db = client[os.getenv("DB_NAME")]
     return db
+
+
+def enqueue_pending_edit(db, collection_name, payload, target_id=None, lookup_name=None):
+    """Store a pending write request for admin review."""
+    pending_doc = {
+        'collection_name': collection_name,
+        'payload': payload,
+        'target_id': ObjectId(target_id) if target_id else None,
+        'lookup_name': lookup_name.strip() if lookup_name else None,
+        'submitted_at': datetime.utcnow().isoformat(),
+    }
+    db.tmp.insert_one(pending_doc)
+
+
+def parse_links_input(form):
+    """Parse link inputs from either repeated fields or newline-separated textarea."""
+    raw_links = form.getlist('links')
+    links = []
+    for raw_value in raw_links:
+        if not raw_value:
+            continue
+        for candidate in raw_value.splitlines():
+            cleaned = candidate.strip()
+            if cleaned:
+                links.append(cleaned)
+    return links
+
+
+def case_insensitive_name_query(name):
+    """Build an exact case-insensitive name query with escaped user input."""
+    return {'name': {'$regex': f'^{re.escape(name)}$', '$options': 'i'}}
+
+
+def is_safe_review_payload(collection_name, payload):
+    """Return whether a pending edit payload is safe to apply."""
+    collection_config = REVIEWABLE_COLLECTIONS.get(collection_name)
+    if not collection_config or not isinstance(payload, dict) or not payload:
+        return False
+    allowed_fields = collection_config['allowed_fields']
+    for field_name in payload:
+        if field_name not in allowed_fields:
+            return False
+        if field_name.startswith('$') or '.' in field_name:
+            return False
+    return True
+
+
+def get_directory_context(collection):
+    """Return visible directory entries grouped by starting letter."""
+    show_all = request.args.get('show_all') == '1'
+    entries = list(collection.find())
+    if not show_all:
+        entries = [
+            entry for entry in entries
+            if entry.get('description', '').strip()
+        ]
+    entries.sort(key=lambda x: x['name'].lower())
+
+    grouped_entries = {}
+    for entry in entries:
+        name = entry.get('name', '')
+        if not name:
+            continue
+        grouped_entries.setdefault(name[0].upper(), []).append(entry)
+
+    visible_letters = [
+        letter for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        if grouped_entries.get(letter)
+    ]
+    return entries, grouped_entries, visible_letters, show_all
+
+
 @app.route('/', methods=['GET', 'POST'])
-def index():  # pylint: disable=too-many-locals,too-many-branches
-    """Display upcoming events with optional search functionality."""
+def index():
+    """Render the upcoming events listing."""
     db = get_db_connection()
     search_query = ""
     # Use cutoff time of 6 hours past the finish time in Melbourne timezone
@@ -70,7 +169,8 @@ def index():  # pylint: disable=too-many-locals,too-many-branches
             key = artist.strip().lower()
             artist_doc = artist_lookup.get(key)
             if artist_doc and artist_doc.get('description', '').strip():
-                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+                event['artist_links'].append(
+                    {'name': artist.strip(), 'id': str(artist_doc['_id'])})
             else:
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
@@ -79,18 +179,18 @@ def index():  # pylint: disable=too-many-locals,too-many-branches
     # Use MongoDB's collation for case-insensitive and space-insensitive matching
     # Build a lookup of all venues in the DB, normalized for spaces and case
     def normalize_name(name):
+        """Normalize names for loose matching."""
         return ' '.join(name.strip().lower().split())
+
     venue_docs = list(db.venues.find())
     venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
     for event in events:
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            # Try a fallback: search in MongoDB with collation
-            venue_doc = db.venues.find_one(
-                {'name': event.get('venue', '')},
-                collation={'locale': 'en', 'strength': 1}
-            )
+            # Fall back to MongoDB collation for case-insensitive matching.
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={
+                                           'locale': 'en', 'strength': 1})
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -104,29 +204,36 @@ def index():  # pylint: disable=too-many-locals,too-many-branches
         if not organiser_doc:
             organiser_doc = db.Organisers.find_one(
                 {'name': event.get('organisers', '')},
-                collation={'locale': 'en', 'strength': 1}
+                collation={'locale': 'en', 'strength': 1},
             )
         if organiser_doc and organiser_doc.get('description', '').strip():
-            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+            event['organiser_link'] = {
+                'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
             event['organiser_link'] = {'name': event['organisers'], 'id': None}
     # --- END ORGANISER LINK LOGIC ---
 
-    return render_template('index.html', events=events,
-                         search_query=search_query, show_past=False,
-                         artists=artist_docs)
+    return render_template(
+        'index.html',
+        events=events,
+        search_query=search_query,
+        show_past=False,
+        artists=artist_docs,
+    )
+
 
 @app.route('/clearEventSearch', methods=['POST'])
 def clear_event_search():
-    """Clear event search and redirect to appropriate view."""
+    """Clear the event search and return to the current listing."""
     show_past = request.form.get('show_past') == 'true'
     if show_past:
         return redirect(url_for('past_events'))
     return redirect(url_for('index'))
 
+
 @app.route('/past', methods=['GET', 'POST'])
-def past_events():  # pylint: disable=too-many-locals,too-many-branches
-    """Display past events with optional search functionality."""
+def past_events():
+    """Render the past events listing."""
     db = get_db_connection()
     search_query = ""
     melbourne_tz = pytz.timezone("Australia/Melbourne")
@@ -167,13 +274,15 @@ def past_events():  # pylint: disable=too-many-locals,too-many-branches
             key = artist.strip().lower()
             artist_doc = artist_lookup.get(key)
             if artist_doc and artist_doc.get('description', '').strip():
-                event['artist_links'].append({'name': artist.strip(), 'id': str(artist_doc['_id'])})
+                event['artist_links'].append(
+                    {'name': artist.strip(), 'id': str(artist_doc['_id'])})
             else:
                 event['artist_links'].append({'name': artist.strip(), 'id': None})
     # --- END ARTIST LINK LOGIC ---
 
     # --- VENUE LINK LOGIC ---
     def normalize_name(name):
+        """Normalize names for loose matching."""
         return ' '.join(name.strip().lower().split())
     venue_docs = list(db.venues.find())
     venue_lookup = {normalize_name(v['name']): v for v in venue_docs}
@@ -181,10 +290,8 @@ def past_events():  # pylint: disable=too-many-locals,too-many-branches
         venue_key = normalize_name(event.get('venue', ''))
         venue_doc = venue_lookup.get(venue_key)
         if not venue_doc:
-            venue_doc = db.venues.find_one(
-                {'name': event.get('venue', '')},
-                collation={'locale': 'en', 'strength': 1}
-            )
+            venue_doc = db.venues.find_one({'name': event.get('venue', '')}, collation={
+                                           'locale': 'en', 'strength': 1})
         if venue_doc and venue_doc.get('description', '').strip():
             event['venue_link'] = {'name': event['venue'], 'id': str(venue_doc['_id'])}
         else:
@@ -200,23 +307,28 @@ def past_events():  # pylint: disable=too-many-locals,too-many-branches
         if not organiser_doc:
             organiser_doc = db.Organisers.find_one(
                 {'name': event.get('organisers', '')},
-                collation={'locale': 'en', 'strength': 1}
+                collation={'locale': 'en', 'strength': 1},
             )
         if organiser_doc and organiser_doc.get('description', '').strip():
-            event['organiser_link'] = {'name': event['organisers'], 'id': str(organiser_doc['_id'])}
+            event['organiser_link'] = {
+                'name': event['organisers'], 'id': str(organiser_doc['_id'])}
         else:
             event['organiser_link'] = {'name': event['organisers'], 'id': None}
     # --- END ORGANISER LINK LOGIC ---
 
     return render_template('index.html', events=events, search_query=search_query, show_past=True)
 
+
 @app.route('/createEvent', methods=['POST'])
 def create_event():
-    """Create a new event and associated artists/venues/organisers if needed."""
+    """Create a new event from form data."""
 
-    ## Validate the input data
-    if (not request.form['title'] or not request.form['start_datetime']
-            or not request.form['end_datetime']):
+    # Validate the input data
+    if (
+        not request.form['title']
+        or not request.form['start_datetime']
+        or not request.form['end_datetime']
+    ):
         return "Missing required fields", 400
     # check end datetime is after start datetime
     try:
@@ -226,36 +338,35 @@ def create_event():
             return "End datetime must be after start datetime", 400
     except ValueError:
         return "Invalid datetime format", 400
+
     title = request.form['title']
-    event_organisers = request.form['organisers']
+    organisers = request.form['organisers']
     venue = request.form['venue']
     link = request.form['link']
     start_datetime = request.form['start_datetime']
     end_datetime = request.form['end_datetime']
     tags = [t.strip() for t in request.form['tags'].split(',') if t.strip()]
-    event_artists = [a.strip() for a in request.form['artists'].split(',') if a.strip()]
+    artists = [a.strip() for a in request.form['artists'].split(',') if a.strip()]
 
     db = get_db_connection()
     db.events.insert_one({
         'start_datetime': start_datetime,
         'end_datetime': end_datetime,
         'title': title,
-        'organisers': event_organisers,
+        'organisers': organisers,
         'venue': venue,
         'link': link,
         'tags': tags,
-        'artists': event_artists
+        'artists': artists
     })
 
     # --- Artists Table Management ---
-    for artist in event_artists:
+    for artist in artists:
         artist_clean = artist.strip()
         if not artist_clean:
             continue
         # Check if artist exists (case-insensitive, trimmed)
-        existing = db.Artists.find_one({
-            'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
-        })
+        existing = db.Artists.find_one(case_insensitive_name_query(artist_clean))
         if not existing:
             db.Artists.insert_one({
                 'name': artist_clean,
@@ -265,13 +376,11 @@ def create_event():
     # --- End Artists Table Management ---
 
     # --- Organisers Table Management ---
-    for organiser in [o.strip() for o in event_organisers.split(',') if o.strip()]:
+    for organiser in [o.strip() for o in organisers.split(',') if o.strip()]:
         organiser_clean = organiser
         if not organiser_clean:
             continue
-        existing = db.Organisers.find_one({
-            'name': {'$regex': f'^{organiser_clean}$', '$options': 'i'}
-        })
+        existing = db.Organisers.find_one(case_insensitive_name_query(organiser_clean))
         if not existing:
             db.Organisers.insert_one({
                 'name': organiser_clean,
@@ -284,9 +393,7 @@ def create_event():
     # --- Venues Table Management ---
     venue_clean = venue.strip()
     if venue_clean:
-        existing = db.venues.find_one({
-            'name': {'$regex': f'^{venue_clean}$', '$options': 'i'}
-        })
+        existing = db.venues.find_one(case_insensitive_name_query(venue_clean))
         if not existing:
             db.venues.insert_one({
                 'name': venue_clean,
@@ -299,9 +406,10 @@ def create_event():
 
     return redirect(url_for('index'))
 
+
 @app.route('/createVenue', methods=['POST'])
 def create_venue():
-    """Create a new venue."""
+    """Create a new venue from form data."""
     name = request.form['name']
     description = request.form['description']
     location = request.form['location']
@@ -309,48 +417,71 @@ def create_venue():
     link = request.form['link']
 
     db = get_db_connection()
-    db.venues.insert_one({
+    enqueue_pending_edit(db, 'venues', {
         'name': name,
         'description': description,
         'location': location,
         'contact': contact,
         'link': link
-    })
+    }, lookup_name=name)
     return redirect(url_for('venues'))
+
 
 @app.route('/addEvent', methods=['GET'])
 def add_event():
-    """Display the add event form."""
+    """Render the add-event form."""
     return render_template('add_event.html')
+
 
 @app.route('/venues', methods=['GET'])
 def venues():
-    """Display all venues."""
+    """Render the venues index page."""
     db = get_db_connection()
-    venues_list = db.venues.find()
-    return render_template('venues.html', venues=venues_list)
+    venues, grouped_venues, visible_letters, show_all = get_directory_context(db.venues)
+    return render_template(
+        'venues.html',
+        venues=venues,
+        grouped_venues=grouped_venues,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
+
 
 @app.route('/organisers', methods=['GET'])
 def organisers():
-    """Display all organisers."""
+    """Render the organisers index page."""
     db = get_db_connection()
-    organisers = list(db.Organisers.find())  # pylint: disable=redefined-outer-name
-    organisers.sort(key=lambda x: x['name'].lower())
-    return render_template('organisers.html', organisers=organisers)
+    organisers, grouped_organisers, visible_letters, show_all = get_directory_context(
+        db.Organisers
+    )
+    return render_template(
+        'organisers.html',
+        organisers=organisers,
+        grouped_organisers=grouped_organisers,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
+
 
 @app.route('/artists', methods=['GET'])
 def artists():
-    """Display all artists."""
+    """Render the artists index page."""
     db = get_db_connection()
-    # Fetch all artists, sort alphabetically (case-insensitive)
-    artists = list(db.Artists.find())  # pylint: disable=redefined-outer-name
-    artists.sort(key=lambda x: x['name'].lower())
-    return render_template('artists.html', artists=artists)
+    artists, grouped_artists, visible_letters, show_all = get_directory_context(db.Artists)
+    return render_template(
+        'artists.html',
+        artists=artists,
+        grouped_artists=grouped_artists,
+        visible_letters=visible_letters,
+        show_all=show_all,
+    )
 
 # New route to show calendar options.
+
+
 @app.route('/calendar/<event_id>')
 def calendar_event(event_id):
-    """Display calendar export options for an event."""
+    """Render calendar links for an event."""
     db = get_db_connection()
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
@@ -381,17 +512,20 @@ def calendar_event(event_id):
         <a href="{gcal_url}" target="_blank">Add to Google Calendar</a>
       </p>
       <p>
-        <a href="{url_for('ics_file', event_id=event_id)}"
-           target="_blank">Download ICS to use in iCalendar</a>
+        <a href="{url_for('ics_file', event_id=event_id)}" target="_blank">
+          Download ICS to use in iCalendar
+        </a>
       </p>
     </body>
     </html>
     """
 
 # New route to generate ICS file.
+
+
 @app.route('/ics/<event_id>')
 def ics_file(event_id):
-    """Generate and download an ICS calendar file for an event."""
+    """Generate an ICS download for an event."""
     db = get_db_connection()
     event = db.events.find_one({'_id': ObjectId(event_id)})
     if not event:
@@ -416,22 +550,25 @@ END:VCALENDAR
     return Response(
         ics_content,
         mimetype="text/calendar",
-        headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"}
+        headers={"Content-Disposition": f"attachment; filename={event['title']}.ics"},
     )
 
+
 @app.route('/notes', methods=['GET', 'POST'])
-def notes():  # pylint: disable=too-many-locals,too-many-branches
-    """Display notes with optional search functionality."""
+def notes():
+    """Render searchable markdown notes."""
     notes_dir = os.path.join(os.path.dirname(__file__), 'notes')
     search_query = ""
-    notes = []  # pylint: disable=redefined-outer-name
+    notes = []
+
     if request.method == 'POST' and 'search' in request.form:
         search_query = request.form['search']
+
     if os.path.exists(notes_dir):
         for filename in os.listdir(notes_dir):
             if filename.endswith('.md'):
                 filepath = os.path.join(notes_dir, filename)
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, 'r') as f:
                     content = f.read()
                     # Parse front matter
                     metadata = {}
@@ -445,6 +582,7 @@ def notes():  # pylint: disable=too-many-locals,too-many-branches
                                 if ':' in line:
                                     key, value = line.split(':', 1)
                                     metadata[key.strip()] = value.strip()
+
                     # Convert date string to datetime if present
                     if 'date' in metadata:
                         try:
@@ -462,16 +600,11 @@ def notes():  # pylint: disable=too-many-locals,too-many-branches
 
                     # Apply search filter only if there's a query from POST
                     if search_query:
-                        title_match = (
-                            metadata.get('title', '').lower().find(search_query.lower()) != -1
-                        )
-                        tags_match = any(
-                            search_query.lower() in tag.lower()
-                            for tag in metadata.get('tags', [])
-                        )
-                        content_match = (
-                            content.lower().find(search_query.lower()) != -1
-                        )
+                        title_match = metadata.get('title', '').lower().find(
+                            search_query.lower()) != -1
+                        tags_match = any(search_query.lower() in tag.lower()
+                                         for tag in metadata.get('tags', []))
+                        content_match = content.lower().find(search_query.lower()) != -1
                         if not (title_match or tags_match or content_match):
                             continue
 
@@ -486,31 +619,35 @@ def notes():  # pylint: disable=too-many-locals,too-many-branches
     notes.sort(key=lambda x: x['metadata']['date'], reverse=True)
     has_results = len(notes) > 0
     return render_template('notes.html',
-                         notes=notes,
-                         search_query=search_query,
-                         has_results=has_results)
+                           notes=notes,
+                           search_query=search_query,
+                           has_results=has_results)
+
 
 @app.route('/clearNoteSearch', methods=['POST'])
 def clear_note_search():
-    """Clear note search and redirect to notes view."""
+    """Clear the notes search query."""
     return redirect(url_for('notes'))
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
-    """Handle admin login."""
+    """Authenticate an admin user."""
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         if username == os.getenv("ADMIN_USER") and password == os.getenv("ADMIN_PASS"):
             session['admin'] = True
-            return redirect(url_for('admin_dashboard'))
-        error = "Invalid credentials"
-        return render_template('admin_login.html', error=error)
+            return redirect(url_for('admin_events'))
+        else:
+            error = "Invalid credentials"
+            return render_template('admin_login.html', error=error)
     return render_template('admin_login.html')
 
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    """Display admin dashboard with all events."""
+
+@app.route('/admin/events')
+def admin_events():
+    """Render the admin events page."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -521,18 +658,87 @@ def admin_dashboard():
     events.sort(key=lambda x: x['start_datetime'])
     return render_template('admin_dashboard.html', events=events)
 
+
+@app.route('/admin/review_edits')
+def admin_review_edits():
+    """Render queued Artist/Venue/Organiser writes for approval."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    pending_edits = list(db.tmp.find().sort('submitted_at', 1))
+    for edit in pending_edits:
+        target_id = edit.get('target_id')
+        edit['target_id_str'] = str(target_id) if target_id else None
+        payload = edit.get('payload', {})
+        edit['object_name'] = payload.get('name') or edit.get('lookup_name') or 'Unnamed'
+    return render_template('admin_review_edits.html', pending_edits=pending_edits)
+
+
+@app.route('/admin/review_edits/<edit_id>/approve', methods=['POST'])
+def approve_review_edit(edit_id):
+    """Approve a queued write and apply it to the destination collection."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    pending_edit = db.tmp.find_one({'_id': ObjectId(edit_id)})
+    if not pending_edit:
+        abort(404)
+
+    collection_name = pending_edit.get('collection_name')
+    payload = pending_edit.get('payload', {})
+    target_id = pending_edit.get('target_id')
+    lookup_name = pending_edit.get('lookup_name', '')
+
+    if not is_safe_review_payload(collection_name, payload):
+        abort(400)
+
+    destination_collection = db[collection_name]
+
+    if target_id:
+        update_result = destination_collection.update_one({'_id': target_id}, {'$set': payload})
+        if update_result.matched_count == 0:
+            abort(404)
+    else:
+        existing = None
+        if lookup_name:
+            existing = destination_collection.find_one({
+                REVIEWABLE_COLLECTIONS[collection_name]['name_field']: {
+                    '$regex': f'^{re.escape(lookup_name)}$',
+                    '$options': 'i'
+                }
+            })
+        if existing:
+            destination_collection.update_one({'_id': existing['_id']}, {'$set': payload})
+        else:
+            destination_collection.insert_one(payload)
+
+    db.tmp.delete_one({'_id': ObjectId(edit_id)})
+    return redirect(url_for('admin_review_edits'))
+
+
+@app.route('/admin/review_edits/<edit_id>/reject', methods=['POST'])
+def reject_review_edit(edit_id):
+    """Reject a queued write and remove it from the review queue."""
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    db = get_db_connection()
+    db.tmp.delete_one({'_id': ObjectId(edit_id)})
+    return redirect(url_for('admin_review_edits'))
+
+
 @app.route('/admin/delete/<event_id>', methods=['POST'])
 def admin_delete(event_id):
-    """Delete an event (admin only)."""
+    """Delete an event from the admin dashboard."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
     db.events.delete_one({'_id': ObjectId(event_id)})
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_events'))
+
 
 @app.route('/admin/edit/<event_id>', methods=['GET', 'POST'])
 def admin_edit(event_id):
-    """Edit an event (admin only)."""
+    """Edit an event from the admin dashboard."""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     db = get_db_connection()
@@ -544,11 +750,12 @@ def admin_edit(event_id):
             'link': request.form['link'],
             'start_datetime': request.form['start_datetime'],
             'end_datetime': request.form['end_datetime'],
-            'tags': [tag.strip() for tag in request.form['tags'].split(',')
-                     if tag.strip()],
-            'artists': [artist.strip()
-                       for artist in request.form['artists'].split(',')
-                       if artist.strip()]
+            'tags': [tag.strip() for tag in request.form['tags'].split(',') if tag.strip()],
+            'artists': [
+                artist.strip()
+                for artist in request.form['artists'].split(',')
+                if artist.strip()
+            ]
         }
         db.events.update_one({'_id': ObjectId(event_id)}, {'$set': updated_fields}, upsert=True)
         # --- Artists Table Management for update ---
@@ -556,9 +763,7 @@ def admin_edit(event_id):
             artist_clean = artist.strip()
             if not artist_clean:
                 continue
-            existing = db.Artists.find_one({
-                'name': {'$regex': f'^{artist_clean}$', '$options': 'i'}
-            })
+            existing = db.Artists.find_one(case_insensitive_name_query(artist_clean))
             if not existing:
                 db.Artists.insert_one({
                     'name': artist_clean,
@@ -567,38 +772,47 @@ def admin_edit(event_id):
                     'links': []
                 })
         # --- End Artists Table Management ---
-        return redirect(url_for('admin_dashboard'))
-    event = db.events.find_one({'_id': ObjectId(event_id)})
-    if not event:
-        abort(404)
-    return render_template('admin_edit.html', event=event)
+        return redirect(url_for('admin_events'))
+    else:
+        event = db.events.find_one({'_id': ObjectId(event_id)})
+        if not event:
+            abort(404)
+        return render_template('admin_edit.html', event=event)
+
 
 def export_database():
-    """Export all database collections to a JSON file."""
+    """Export database collections to a JSON backup file."""
     db = get_db_connection()
     export_data = {
         'events': list(db.events.find()),
         'venues': list(db.venues.find()),
         'organisers': list(db.Organisers.find()),
-        'artists': list(db.Artists.find())
+        'artists': list(db.Artists.find()),
+        'tmp': list(db.tmp.find())
     }
+
     for collection in export_data.values():
         for doc in collection:
             doc['_id'] = str(doc['_id'])
+
     # Create exports directory if it doesn't exist
     exports_dir = os.path.join(os.path.dirname(__file__), 'exports')
     if not os.path.exists(exports_dir):
         os.makedirs(exports_dir)
+
     # Generate filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = os.path.join(exports_dir, f'db_backup_{timestamp}.json')
-    with open(filename, 'w', encoding='utf-8') as f:
+
+    with open(filename, 'w') as f:
         json.dump(export_data, f, indent=2, default=str)
+
     return filename
+
 
 @app.route('/admin/export_db')
 def admin_export_db():
-    """Export database to JSON file (admin only)."""
+    """Download a JSON backup of the database."""
     if not session.get('admin'):
         abort(403)
     try:
@@ -609,64 +823,78 @@ def admin_export_db():
             as_attachment=True,
             download_name=f'naarm_list_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
         )
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         return f"Export failed: {str(e)}", 500
+
 
 @app.route('/admin/logout')
 def admin_logout():
-    """Log out from admin session."""
+    """Log out the current admin session."""
     session['admin'] = False
     return redirect(url_for('index'))
 
+
+@app.route('/edit-submitted')
+def edit_submitted():
+    """Acknowledge a public edit submission."""
+    return render_template('edit_submitted.html')
+
+
 @app.route('/robots.txt')
 def robots():
-    """Serve robots.txt file."""
+    """Serve the robots.txt file."""
     return send_from_directory(os.path.dirname(__file__), 'robots.txt')
+
 
 @app.route('/artist/<artist_id>')
 def artist_detail(artist_id):
-    """Display artist details."""
+    """Render the detail page for an artist."""
     db = get_db_connection()
     artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
     if not artist:
         abort(404)
     return render_template('artist_detail.html', artist=artist)
 
+
 @app.route('/artist/<artist_id>/edit', methods=['GET', 'POST'])
 def edit_artist(artist_id):
-    """Edit artist details."""
+    """Edit an artist record."""
     db = get_db_connection()
     artist = db.Artists.find_one({'_id': ObjectId(artist_id)})
     if not artist:
         abort(404)
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {'description': description}
-        if links:
-            update_fields['links'] = links
-        else:
-            update_fields['links'] = []
-        db.Artists.update_one({'_id': ObjectId(artist_id)}, {'$set': update_fields})
-        return redirect(url_for('artist_detail', artist_id=artist_id))
+        update_fields['links'] = links if links else []
+        enqueue_pending_edit(
+            db,
+            'Artists',
+            update_fields,
+            target_id=artist_id,
+            lookup_name=artist.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in artist:
         artist['links'] = []
     return render_template('edit_artist.html', artist=artist)
 
+
 @app.route('/organiser/<organiser_id>')
 def organiser_detail(organiser_id):
-    """Display organiser details."""
+    """Render the detail page for an organiser."""
     db = get_db_connection()
     organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
     if not organiser:
         abort(404)
     return render_template('organiser_detail.html', organiser=organiser)
 
+
 @app.route('/organiser/<organiser_id>/edit', methods=['GET', 'POST'])
 def edit_organiser(organiser_id):
-    """Edit organiser details."""
+    """Edit an organiser record."""
     db = get_db_connection()
     organiser = db.Organisers.find_one({'_id': ObjectId(organiser_id)})
     if not organiser:
@@ -674,20 +902,26 @@ def edit_organiser(organiser_id):
     if request.method == 'POST':
         description = request.form.get('description', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {'description': description, 'contact': contact}
         update_fields['links'] = links if links else []
-        db.Organisers.update_one({'_id': ObjectId(organiser_id)}, {'$set': update_fields})
-        return redirect(url_for('organiser_detail', organiser_id=organiser_id))
+        enqueue_pending_edit(
+            db,
+            'Organisers',
+            update_fields,
+            target_id=organiser_id,
+            lookup_name=organiser.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in organiser:
         organiser['links'] = []
     return render_template('edit_organiser.html', organiser=organiser)
 
+
 @app.route('/venue/<venue_id>')
 def venue_detail(venue_id):
-    """Display venue details."""
+    """Render the detail page for a venue."""
     db = get_db_connection()
     venue = db.venues.find_one({'_id': ObjectId(venue_id)})
     if not venue:
@@ -697,9 +931,10 @@ def venue_detail(venue_id):
         venue['links'] = []
     return render_template('venue_detail.html', venue=venue)
 
+
 @app.route('/venue/<venue_id>/edit', methods=['GET', 'POST'])
 def edit_venue(venue_id):
-    """Edit venue details."""
+    """Edit a venue record."""
     db = get_db_connection()
     venue = db.venues.find_one({'_id': ObjectId(venue_id)})
     if not venue:
@@ -708,20 +943,26 @@ def edit_venue(venue_id):
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
-        # Gather all non-blank links from the form
-        links = [l.strip() for l in request.form.getlist('links') if l.strip()]
+        links = parse_links_input(request.form)
         update_fields = {
             'description': description,
             'location': location,
             'contact': contact,
             'links': links if links else []
         }
-        db.venues.update_one({'_id': ObjectId(venue_id)}, {'$set': update_fields})
-        return redirect(url_for('venue_detail', venue_id=venue_id))
+        enqueue_pending_edit(
+            db,
+            'venues',
+            update_fields,
+            target_id=venue_id,
+            lookup_name=venue.get('name', '')
+        )
+        return redirect(url_for('edit_submitted'))
     # Ensure links field exists for rendering
     if 'links' not in venue:
         venue['links'] = []
     return render_template('edit_venue.html', venue=venue)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)

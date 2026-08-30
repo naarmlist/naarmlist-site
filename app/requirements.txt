@@ -5,3 +5,5 @@ pytz==2025.2
 pylint==4.0.5
 mongomock==4.3.0
 pytest==9.0.3
+coverage==7.14.1
+pycodestyle==2.14.0
